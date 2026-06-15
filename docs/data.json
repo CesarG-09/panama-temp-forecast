@@ -1,9 +1,5 @@
 {
-<<<<<<< Updated upstream
-  "generado": "2026-06-14T21:01:30.466339-05:00",
-=======
-  "generado": "2026-06-14T21:06:40.937150-05:00",
->>>>>>> Stashed changes
+  "generado": "2026-06-14T21:07:55.479550-05:00",
   "historico": [
     {
       "fecha": "2020-01-01",
@@ -9426,13 +9422,6 @@
     {
       "fecha_objetivo": "2026-06-21",
       "temp_max_pred_c": 30.2
-<<<<<<< Updated upstream
-    },
-    {
-      "fecha_objetivo": "2026-06-22",
-      "temp_max_pred_c": 32.2
-=======
->>>>>>> Stashed changes
     }
   ],
   "metricas": {

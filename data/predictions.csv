@@ -6,7 +6,3 @@ fecha_prediccion,fecha_objetivo,temp_max_pred_c,modelo_version
 2026-06-15,2026-06-19,30.5,clima-v2
 2026-06-15,2026-06-20,30.4,clima-v2
 2026-06-15,2026-06-21,30.2,clima-v2
-<<<<<<< Updated upstream
-2026-06-15,2026-06-22,32.2,clima-v1
-=======
->>>>>>> Stashed changes
