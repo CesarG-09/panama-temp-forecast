@@ -7,6 +7,8 @@ from src import pipeline, storage
 
 def test_pipeline_recolecta_evalua_y_predice(monkeypatch, tmp_path):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    # Aísla el data.json del dashboard real durante el test
+    monkeypatch.setattr(pipeline, "RUTA_DATA_JSON", tmp_path / "data.json")
 
     # Histórico previo: 400 días constantes a 30 °C terminando el 2021-05-31
     fechas = pd.date_range(end="2021-05-31", periods=400, freq="D")
@@ -31,6 +33,7 @@ def test_pipeline_recolecta_evalua_y_predice(monkeypatch, tmp_path):
 
 def test_pipeline_es_idempotente(monkeypatch, tmp_path):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(pipeline, "RUTA_DATA_JSON", tmp_path / "data.json")
     fechas = pd.date_range(end="2021-05-31", periods=400, freq="D")
     storage.upsert_observations(
         [{"fecha": f.strftime("%Y-%m-%d"), "temp_max_c": 30.0} for f in fechas])
