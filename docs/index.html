@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Temperatura máxima — Ciudad de Panamá</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1 { font-size: 1.5rem; }
+    .metricas { display: flex; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap; }
+    .card { background: #f4f6f8; border-radius: 10px; padding: 1rem 1.25rem; }
+    .card .valor { font-size: 1.6rem; font-weight: 700; }
+    .card .etiqueta { font-size: .8rem; color: #555; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border-bottom: 1px solid #e2e2e2; padding: .5rem; text-align: left; font-size: .9rem; }
+    .ok { color: #1a7f37; } .fail { color: #cf222e; }
+    footer { margin-top: 2rem; font-size: .8rem; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>🌡️ Temperatura máxima — Ciudad de Panamá (MPMG)</h1>
+  <p>Predicción propia del máximo diario, con verificación de aciertos para retroalimentar el modelo.</p>
+
+  <div class="metricas" id="metricas"></div>
+  <canvas id="grafica" height="120"></canvas>
+
+  <h2>Últimas verificaciones</h2>
+  <table id="tabla">
+    <thead><tr><th>Fecha objetivo</th><th>Predicho</th><th>Real</th><th>Error</th><th>Veredicto</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <footer>Generado: <span id="generado"></span> · Datos: Wunderground / Weather.com</footer>
+  <script src="./app.js"></script>
+</body>
+</html>
