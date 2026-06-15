@@ -25,7 +25,6 @@ jobs:
       - name: Ejecutar backfill
         env:
           WUNDERGROUND_API_KEY: ${{ secrets.WUNDERGROUND_API_KEY }}
-          PTF_DESDE: ${{ inputs.desde }}
         run: python -c "from datetime import date; from src import backfill; backfill.correr(date.fromisoformat('${{ inputs.desde }}'))"
       - name: Commit del histórico
         run: |
