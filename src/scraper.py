@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import requests
@@ -80,3 +80,19 @@ def fetch_via_browser(fecha) -> list[dict]:
         html = pagina.content()
         navegador.close()
     return [parse_history_html(html, fecha)]
+
+
+def obtener_observaciones(desde, hasta) -> list[dict]:
+    """Intenta la API; si falla, cae al navegador día por día."""
+    try:
+        return fetch_via_api(desde, hasta)
+    except Exception:
+        filas: list[dict] = []
+        dia = desde
+        while dia <= hasta:
+            try:
+                filas.extend(fetch_via_browser(dia))
+            except Exception:
+                pass  # día sin dato: se omite, queda como hueco
+            dia += timedelta(days=1)
+        return filas
