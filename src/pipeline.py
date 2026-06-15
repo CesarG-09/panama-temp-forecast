@@ -31,9 +31,10 @@ def correr(hoy: date | None = None) -> None:
     evaluacion = evaluate.evaluar(predicciones, observaciones)
     storage.write_evaluation(evaluacion)
 
-    # 3. Ajustar el modelo y predecir el horizonte
+    # 3. Ajustar el modelo y predecir el horizonte (desde HOY inclusive: el día
+    #    actual aún no está observado, así que también se predice)
     modelo = Predictor().ajustar(observaciones, evaluacion)
-    fechas_fut = [hoy + timedelta(days=i) for i in range(1, config.HORIZONTE_DIAS + 1)]
+    fechas_fut = [hoy + timedelta(days=i) for i in range(config.HORIZONTE_DIAS)]
     valores = modelo.predecir(fechas_fut)
     filas = [{
         "fecha_prediccion": hoy.isoformat(),

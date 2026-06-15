@@ -26,7 +26,7 @@ def _sanear(valor):
 
 def construir_payload(observaciones: pd.DataFrame, predicciones: pd.DataFrame,
                       evaluacion: pd.DataFrame, hoy: str) -> dict:
-    futuras = predicciones[predicciones["fecha_objetivo"] > hoy]
+    futuras = predicciones[predicciones["fecha_objetivo"] >= hoy]
     futuras = (futuras.sort_values("fecha_prediccion")
                       .drop_duplicates("fecha_objetivo", keep="last")
                       .sort_values("fecha_objetivo"))

@@ -32,10 +32,12 @@ class Predictor:
     """Climatología + anomalía reciente + corrección de sesgo (lazo de mejora)."""
 
     def __init__(self, clima: Climatologia | None = None,
-                 dias_anomalia: int = 3, dias_sesgo: int = 14):
+                 dias_anomalia: int = 3, dias_sesgo: int = 14,
+                 decaimiento: float = 0.7):
         self.clima = clima or Climatologia()
         self.dias_anomalia = dias_anomalia
         self.dias_sesgo = dias_sesgo
+        self.decaimiento = decaimiento
         self.anomalia = 0.0
         self.sesgo = 0.0
 
@@ -56,5 +58,8 @@ class Predictor:
         return self
 
     def predecir(self, fechas) -> list[float]:
+        # La anomalía reciente decae con el horizonte (la persistencia se diluye:
+        # el día i-ésimo conserva anomalia * decaimiento**i); el sesgo no decae.
         base = self.clima.predecir(fechas)
-        return [round(b + self.anomalia - self.sesgo, 1) for b in base]
+        return [round(b + self.anomalia * (self.decaimiento ** i) - self.sesgo, 1)
+                for i, b in enumerate(base)]

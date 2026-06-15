@@ -7,7 +7,7 @@ TZ = "America/Panama"
 HORIZONTE_DIAS = 7
 UMBRAL_ACIERTO_C = 1.5
 FECHA_INICIO = date(2020, 1, 1)
-MODELO_VERSION = "clima-v1"
+MODELO_VERSION = "clima-v2"
 
 _DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 

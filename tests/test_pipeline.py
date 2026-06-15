@@ -24,9 +24,10 @@ def test_pipeline_recolecta_evalua_y_predice(monkeypatch, tmp_path):
     pipeline.correr(hoy=date(2021, 6, 1))
 
     preds = storage.read_predictions()
-    # Se generaron 7 predicciones futuras (objetivo 06-02 .. 06-08)
-    futuras = preds[preds["fecha_objetivo"] > "2021-06-01"]
+    # Se generaron 7 predicciones desde hoy inclusive (objetivo 06-01 .. 06-07)
+    futuras = preds[preds["fecha_prediccion"] == "2021-06-01"]
     assert len(futuras) == 7
+    assert "2021-06-01" in set(preds["fecha_objetivo"])  # el día actual sí se predice
     # data.json fue escrito
     assert pipeline.RUTA_DATA_JSON.exists()
 
