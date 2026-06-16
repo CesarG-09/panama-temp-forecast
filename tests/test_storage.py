@@ -2,29 +2,43 @@ import pandas as pd
 from src import storage
 
 
-def test_upsert_crea_y_actualiza_sin_duplicar(tmp_path):
-    ruta = tmp_path / "obs.csv"
-    cols = ["fecha", "temp_max_c"]
+def test_observations_roundtrip(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    storage.upsert_observations([{"fecha": "2020-01-01", "temp_max_c": 31.0}])
+    storage.upsert_observations([{"fecha": "2020-01-01", "temp_max_c": 32.0},
+                                 {"fecha": "2020-01-02", "temp_max_c": 30.0}])
+    df = storage.read_observations()
+    assert len(df) == 2
+    assert df.set_index("fecha").loc["2020-01-01", "temp_max_c"] == 32.0
 
-    storage.upsert_rows(ruta, [{"fecha": "2020-01-01", "temp_max_c": 31.0}], cols, ["fecha"])
-    df = storage.upsert_rows(ruta, [{"fecha": "2020-01-01", "temp_max_c": 32.5}], cols, ["fecha"])
 
+def test_hourly_history_roundtrip_dedup(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    storage.upsert_hourly([{"timestamp": "2020-01-01T00:00", "temp_c": 24.0,
+                            "humedad": 80.0, "nubosidad": 10.0}])
+    storage.upsert_hourly([{"timestamp": "2020-01-01T00:00", "temp_c": 25.0,
+                            "humedad": 81.0, "nubosidad": 11.0}])
+    df = storage.read_hourly()
     assert len(df) == 1
-    assert df.iloc[0]["temp_max_c"] == 32.5
+    assert df.iloc[0]["temp_c"] == 25.0
 
 
-def test_upsert_ordena_por_clave(tmp_path):
-    ruta = tmp_path / "obs.csv"
-    cols = ["fecha", "temp_max_c"]
-    storage.upsert_rows(ruta, [
-        {"fecha": "2020-01-03", "temp_max_c": 33.0},
-        {"fecha": "2020-01-01", "temp_max_c": 31.0},
-    ], cols, ["fecha"])
-    df = storage.read_csv(ruta, cols)
-    assert list(df["fecha"]) == ["2020-01-01", "2020-01-03"]
+def test_predictions_append(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    fila = {"run_timestamp": "2026-06-16T11:00:00", "fecha_objetivo": "2026-06-16",
+            "hora_decision": 6, "pico_pred": 33.0, "p10": 31.5, "p90": 34.5,
+            "modelo_version": "gbm-q-v1"}
+    storage.append_prediction(fila)
+    storage.append_prediction({**fila, "hora_decision": 7})
+    df = storage.read_predictions()
+    assert len(df) == 2
+    assert set(df.columns) == set(fila.keys())
 
 
-def test_read_csv_vacio_devuelve_columnas(tmp_path):
-    df = storage.read_csv(tmp_path / "no_existe.csv", ["fecha", "temp_max_c"])
-    assert list(df.columns) == ["fecha", "temp_max_c"]
-    assert len(df) == 0
+def test_evaluation_write_read(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    ev = pd.DataFrame([{"fecha_objetivo": "2026-06-15", "hora_decision": 12,
+                        "pico_pred": 33.0, "pico_real": 32.4, "error_c": 0.6}])
+    storage.write_evaluation(ev)
+    df = storage.read_evaluation()
+    assert df.iloc[0]["error_c"] == 0.6
