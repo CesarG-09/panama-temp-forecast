@@ -1,47 +1,66 @@
 # panama-temp-forecast 🌡️
 
-Predicción auto-mejorable de la temperatura máxima diaria en Ciudad de Panamá
-(estación **MPMG – Marcos A. Gelabert / Albrook**).
+Predicción por **Machine Learning** del **pico (temperatura máxima) de HOY** en
+Ciudad de Panamá (estación **MPMG – Marcos A. Gelabert / Albrook**), refinada
+**cada hora** con los datos observados a lo largo del día.
 
-Cada día, un workflow de GitHub Actions: recolecta el máximo observado, evalúa
-las predicciones pasadas (acierto/fallo), re-ajusta el modelo con corrección de
-sesgo, predice los próximos 7 días y publica todo en un dashboard.
+La salida de cada corrida es el **pico estimado** (p50) más una **banda de
+confianza** [p10, p90] que se estrecha conforme avanza el día.
 
 **Dashboard:** https://CesarG-09.github.io/panama-temp-forecast/
 
 ## Cómo funciona
 
-`recolectar → evaluar → ajustar → predecir → exportar` (ver `src/pipeline.py`).
-El modelo (`src/model.py`) es una climatología por día-del-año + anomalía
-reciente + corrección de sesgo, detrás de una interfaz `ajustar/predecir`
-intercambiable por algo más avanzado sin tocar el resto.
+- **Modelo:** tres regresores **LightGBM por cuantiles** (p10/p50/p90) detrás de
+  una interfaz `ajustar/predecir` intercambiable (`src/model.py`).
+- **Fuentes de datos:**
+  - **Open-Meteo** — motor de datos del ML: histórico horario (archivo ERA5 desde
+    2020) para entrenar, intradía de hoy (features en vivo) y forecast del día.
+  - **Wunderground MPMG** — la *verdad*: el pico diario real (target del modelo).
+- **Features (solo lo conocible hasta la hora H):** calendario (día-del-año
+  seno/coseno, mes), máximo-hasta-ahora, temperatura actual y rezagos, tasa de
+  subida, humedad, nubosidad y el forecast de Open-Meteo (feature nullable).
+
+## Flujo (workflows de GitHub Actions)
+
+- **`backfill.yml`** (manual) — carga el histórico horario (Open-Meteo) y los
+  picos diarios (Wunderground) desde 2020.
+- **`train.yml`** (nocturno, 06:00 UTC) — backfill incremental + reentrena los
+  modelos y guarda `models/peak_model.txt`.
+- **`hourly.yml`** (cada hora 11:00–21:00 UTC = 6am–4pm Panamá) — predice el pico
+  de hoy, registra la predicción, evalúa los días cerrados y publica el dashboard.
 
 ## Puesta en marcha
 
-1. **Obtener la API key:** abre `https://www.wunderground.com/history/daily/pa/panama-city/MPMG`,
-   abre las herramientas de desarrollo → pestaña *Network* → filtra `historical.json`,
-   y copia el valor del parámetro `apiKey` de la petición.
-2. **Guardar el secret:** repo → Settings → Secrets and variables → Actions →
-   `New repository secret` → nombre `WUNDERGROUND_API_KEY`.
-3. **Habilitar Pages:** Settings → Pages → Source: *GitHub Actions*.
-4. **Cargar el histórico:** Actions → *Backfill histórico* → *Run workflow*
-   (deja `2020-01-01`). Tarda según el rango.
-5. **Listo:** el *Pipeline diario* corre solo cada día a las 12:00 UTC.
+1. **Secret de Wunderground:** repo → Settings → Secrets and variables → Actions →
+   `New repository secret` → nombre `WUNDERGROUND_API_KEY`
+   (ver instrucciones de la apiKey en el historial del proyecto).
+2. **Habilitar Pages:** Settings → Pages → Source: *GitHub Actions*.
+3. **Cargar el histórico:** Actions → *Backfill histórico* → *Run workflow*
+   (deja `2020-01-01`).
+4. **Entrenar:** Actions → *Entrenamiento nocturno* → *Run workflow* (o espera al cron).
+5. **Listo:** la *Predicción horaria* corre sola en la franja diurna.
 
 ## Desarrollo local
 
 ```bash
 pip install -r requirements.txt
-python -m playwright install chromium
-python -m pytest -v            # tests
-export WUNDERGROUND_API_KEY=...  # (Windows: $env:WUNDERGROUND_API_KEY="...")
-python -m src.pipeline         # corre el pipeline una vez
+python -m playwright install chromium   # solo si usas el respaldo de Wunderground
+python -m pytest -v                      # tests
+
+export WUNDERGROUND_API_KEY=...          # (Windows: $env:WUNDERGROUND_API_KEY="...")
+python -m src.backfill 2020-01-01        # carga inicial
+python -m src.train                      # entrena el modelo
+python -m src.predict                    # una corrida de predicción
 ```
 
 ## Estructura
 
-- `src/` — código del pipeline (scraper, model, evaluate, export, pipeline, backfill)
-- `data/` — CSV versionados (observaciones, predicciones, evaluación)
-- `docs/` — dashboard estático (GitHub Pages)
-- `.github/workflows/` — automatización (diario + backfill)
-- `docs/superpowers/` — spec de diseño y este plan
+- `src/` — código: `sources/` (openmeteo, wunderground), `features`, `dataset`,
+  `model`, `train`, `predict`, `backfill`, `evaluate`, `export`, `storage`, `config`.
+- `data/` — CSV versionados: `hourly_history.csv` (entrenamiento), `observations.csv`
+  (picos reales), `predictions.csv` (predicciones horarias), `evaluation.csv`.
+- `models/` — modelo entrenado versionado.
+- `docs/` — dashboard estático (GitHub Pages).
+- `.github/workflows/` — automatización (backfill + entrenamiento + horario).
+- `docs/superpowers/` — spec de diseño y plan de implementación.

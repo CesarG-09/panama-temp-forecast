@@ -1,25 +1,15 @@
 from datetime import date
-
-from src import backfill
-
-
-def test_rangos_mensuales_cubre_desde_hasta():
-    rangos = backfill.rangos_mensuales(date(2020, 1, 1), date(2020, 3, 15))
-    assert rangos[0] == (date(2020, 1, 1), date(2020, 1, 31))
-    assert rangos[1] == (date(2020, 2, 1), date(2020, 2, 29))  # 2020 bisiesto
-    assert rangos[-1] == (date(2020, 3, 1), date(2020, 3, 15))
+from unittest.mock import patch
+from src import backfill, storage
 
 
-def test_correr_backfill_acumula_observaciones(monkeypatch, tmp_path):
+def test_backfill_carga_horario_y_observaciones(tmp_path, monkeypatch):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
-
-    def fake_fetch(desde, hasta):
-        return [{"fecha": desde.isoformat(), "temp_max_c": 31.0}]
-
-    monkeypatch.setattr(backfill.scraper, "obtener_observaciones", fake_fetch)
-
-    backfill.correr(date(2020, 1, 1), date(2020, 3, 15))
-
-    from src import storage
-    obs = storage.read_observations()
-    assert len(obs) == 3  # un dato por cada rango mensual (fixture simplificado)
+    horas = [{"timestamp": "2020-01-01T10:00", "temp_c": 30.0,
+              "humedad": 80.0, "nubosidad": 20.0}]
+    obs = [{"fecha": "2020-01-01", "temp_max_c": 31.0}]
+    with patch("src.backfill.openmeteo.fetch_archivo", return_value=horas), \
+         patch("src.backfill.wunderground.obtener_observaciones", return_value=obs):
+        backfill.correr(desde=date(2020, 1, 1), hasta=date(2020, 1, 1))
+    assert len(storage.read_hourly()) == 1
+    assert len(storage.read_observations()) == 1

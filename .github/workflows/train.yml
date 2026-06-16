@@ -1,17 +1,15 @@
-name: Backfill histórico
+name: Entrenamiento nocturno
 
 on:
+  schedule:
+    - cron: "0 6 * * *"   # 06:00 UTC = 01:00 Panamá
   workflow_dispatch:
-    inputs:
-      desde:
-        description: "Fecha inicial (YYYY-MM-DD)"
-        default: "2020-01-01"
 
 permissions:
   contents: write
 
 jobs:
-  backfill:
+  train:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,14 +20,14 @@ jobs:
         run: |
           pip install -r requirements.txt
           python -m playwright install chromium
-      - name: Ejecutar backfill
+      - name: Entrenar modelo
         env:
           WUNDERGROUND_API_KEY: ${{ secrets.WUNDERGROUND_API_KEY }}
-        run: python -m src.backfill "${{ github.event.inputs.desde }}"
-      - name: Commit de datos
+        run: python -m src.train
+      - name: Commit del modelo y datos
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/
-          git commit -m "data: backfill desde ${{ github.event.inputs.desde }}" || echo "Sin cambios"
+          git add data/ models/
+          git commit -m "train: reentrenamiento $(date -u +%Y-%m-%d)" || echo "Sin cambios"
           git push

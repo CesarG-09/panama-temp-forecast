@@ -1,1 +1,1 @@
-fecha_objetivo,pred_c,real_c,error_c,acierto
+fecha_objetivo,hora_decision,pico_pred,pico_real,error_c

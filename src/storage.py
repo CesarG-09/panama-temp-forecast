@@ -1,60 +1,60 @@
-from pathlib import Path
-
 import pandas as pd
 
 from src import config
 
+_PRED_COLS = ["run_timestamp", "fecha_objetivo", "hora_decision", "pico_pred",
+              "p10", "p90", "modelo_version"]
+_EVAL_COLS = ["fecha_objetivo", "hora_decision", "pico_pred", "pico_real", "error_c"]
+_HOURLY_COLS = ["timestamp", "temp_c", "humedad", "nubosidad"]
+_OBS_COLS = ["fecha", "temp_max_c"]
 
-def read_csv(ruta: Path, columnas: list[str]) -> pd.DataFrame:
-    if Path(ruta).exists():
-        return pd.read_csv(ruta, dtype={"fecha": str, "fecha_objetivo": str,
-                                        "fecha_prediccion": str})
-    return pd.DataFrame(columns=columnas)
 
-
-def upsert_rows(ruta: Path, filas: list[dict], columnas: list[str],
-                claves: list[str]) -> pd.DataFrame:
-    ruta = Path(ruta)
-    nuevo = pd.DataFrame(filas, columns=columnas)
+def _read_csv(ruta, cols) -> pd.DataFrame:
     if ruta.exists():
-        df = pd.concat([read_csv(ruta, columnas), nuevo], ignore_index=True)
-    else:
-        df = nuevo
-    df = (df.drop_duplicates(subset=claves, keep="last")
-            .sort_values(claves)
-            .reset_index(drop=True))
-    ruta.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(ruta, index=False)
-    return df
-
-
-OBS_COLS = ["fecha", "temp_max_c"]
-PRED_COLS = ["fecha_prediccion", "fecha_objetivo", "temp_max_pred_c", "modelo_version"]
-EVAL_COLS = ["fecha_objetivo", "pred_c", "real_c", "error_c", "acierto"]
+        return pd.read_csv(ruta)
+    return pd.DataFrame(columns=cols)
 
 
 def read_observations() -> pd.DataFrame:
-    return read_csv(config.ruta_observaciones(), OBS_COLS)
+    return _read_csv(config.ruta_observaciones(), _OBS_COLS)
 
 
-def upsert_observations(filas: list[dict]) -> pd.DataFrame:
-    return upsert_rows(config.ruta_observaciones(), filas, OBS_COLS, ["fecha"])
+def upsert_observations(filas: list[dict]) -> None:
+    ruta = config.ruta_observaciones()
+    df = pd.concat([read_observations(), pd.DataFrame(filas)], ignore_index=True)
+    df = df.drop_duplicates("fecha", keep="last").sort_values("fecha")
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(ruta, index=False)
+
+
+def read_hourly() -> pd.DataFrame:
+    return _read_csv(config.ruta_historico_horario(), _HOURLY_COLS)
+
+
+def upsert_hourly(filas: list[dict]) -> None:
+    ruta = config.ruta_historico_horario()
+    df = pd.concat([read_hourly(), pd.DataFrame(filas)], ignore_index=True)
+    df = df.drop_duplicates("timestamp", keep="last").sort_values("timestamp")
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(ruta, index=False)
 
 
 def read_predictions() -> pd.DataFrame:
-    return read_csv(config.ruta_predicciones(), PRED_COLS)
+    return _read_csv(config.ruta_predicciones(), _PRED_COLS)
 
 
-def upsert_predictions(filas: list[dict]) -> pd.DataFrame:
-    return upsert_rows(config.ruta_predicciones(), filas, PRED_COLS,
-                       ["fecha_prediccion", "fecha_objetivo"])
+def append_prediction(fila: dict) -> None:
+    ruta = config.ruta_predicciones()
+    df = pd.concat([read_predictions(), pd.DataFrame([fila])], ignore_index=True)
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(ruta, index=False)
+
+
+def read_evaluation() -> pd.DataFrame:
+    return _read_csv(config.ruta_evaluacion(), _EVAL_COLS)
 
 
 def write_evaluation(df: pd.DataFrame) -> None:
     ruta = config.ruta_evaluacion()
     ruta.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(ruta, index=False)
-
-
-def read_evaluation() -> pd.DataFrame:
-    return read_csv(config.ruta_evaluacion(), EVAL_COLS)
