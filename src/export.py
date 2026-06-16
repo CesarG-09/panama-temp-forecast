@@ -1,47 +1,47 @@
 import json
-import math
-from datetime import datetime
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 import pandas as pd
 
-from src import config, evaluate
 
-
-def _sanear(valor):
-    """Convierte NaN/inf en None para producir JSON siempre válido.
-
-    En arranque en frío (sin observaciones) el modelo devuelve NaN; sin esto,
-    json.dumps emitiría tokens `NaN` que rompen el parseo del dashboard.
-    """
-    if isinstance(valor, dict):
-        return {k: _sanear(v) for k, v in valor.items()}
-    if isinstance(valor, list):
-        return [_sanear(v) for v in valor]
-    if isinstance(valor, float) and not math.isfinite(valor):
-        return None
-    return valor
-
-
-def construir_payload(observaciones: pd.DataFrame, predicciones: pd.DataFrame,
+def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
                       evaluacion: pd.DataFrame, hoy: str) -> dict:
-    futuras = predicciones[predicciones["fecha_objetivo"] >= hoy]
-    futuras = (futuras.sort_values("fecha_prediccion")
-                      .drop_duplicates("fecha_objetivo", keep="last")
-                      .sort_values("fecha_objetivo"))
+    hoy_preds = predicciones[predicciones["fecha_objetivo"] == hoy] \
+        .sort_values("hora_decision")
+
+    pico_hoy = None
+    convergencia = []
+    if len(hoy_preds):
+        ult = hoy_preds.iloc[-1]
+        pico_hoy = {"pico_pred": float(ult["pico_pred"]),
+                    "p10": float(ult["p10"]), "p90": float(ult["p90"]),
+                    "hora_decision": int(ult["hora_decision"])}
+        convergencia = [{"hora_decision": int(r["hora_decision"]),
+                         "pico_pred": float(r["pico_pred"]),
+                         "p10": float(r["p10"]), "p90": float(r["p90"])}
+                        for _, r in hoy_preds.iterrows()]
+
+    error_por_hora = []
+    if len(evaluacion):
+        g = evaluacion.assign(abs_err=evaluacion["error_c"].abs()) \
+            .groupby("hora_decision")["abs_err"].mean().reset_index()
+        error_por_hora = [{"hora_decision": int(r["hora_decision"]),
+                           "error_medio_abs": round(float(r["abs_err"]), 2)}
+                          for _, r in g.iterrows()]
+
+    observados = [{"fecha": r["fecha"], "temp_max_c": float(r["temp_max_c"])}
+                  for _, r in observaciones.tail(30).iterrows()]
+
     return {
-        "generado": datetime.now(ZoneInfo(config.TZ)).isoformat(),
-        "historico": observaciones.sort_values("fecha").to_dict("records"),
-        "predicciones": futuras[["fecha_objetivo", "temp_max_pred_c"]].to_dict("records"),
-        "metricas": evaluate.metricas(evaluacion),
-        "evaluaciones": evaluacion.sort_values("fecha_objetivo").tail(30).to_dict("records"),
+        "hoy": hoy,
+        "pico_hoy": pico_hoy,
+        "convergencia_hoy": convergencia,
+        "error_por_hora": error_por_hora,
+        "observados_recientes": observados,
     }
 
 
-def exportar(ruta: Path, payload: dict) -> None:
+def exportar(ruta, payload: dict) -> None:
     ruta = Path(ruta)
     ruta.parent.mkdir(parents=True, exist_ok=True)
-    # allow_nan=False garantiza que un NaN no saneado falle ruidosamente
-    ruta.write_text(json.dumps(_sanear(payload), ensure_ascii=False, indent=2,
-                              allow_nan=False))
+    ruta.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
