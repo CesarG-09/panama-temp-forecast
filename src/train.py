@@ -3,9 +3,9 @@ from src.model import ModeloPico
 
 
 def correr(incremental: bool = True) -> None:
-    # 1. Traer días nuevos antes de reentrenar.
+    # 1. Traer/actualizar los días recientes antes de reentrenar.
     if incremental:
-        backfill.correr()
+        backfill.actualizar_reciente()
 
     # 2. Ensamblar el set y entrenar.
     hist = storage.read_hourly()
