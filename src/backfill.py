@@ -1,31 +1,29 @@
-import calendar
-from datetime import date
+import sys
+from datetime import date, timedelta
 
-from src import config, scraper, storage
-
-
-def rangos_mensuales(desde: date, hasta: date) -> list[tuple[date, date]]:
-    rangos = []
-    cursor = desde
-    while cursor <= hasta:
-        ultimo_dia = calendar.monthrange(cursor.year, cursor.month)[1]
-        fin_mes = date(cursor.year, cursor.month, ultimo_dia)
-        rangos.append((cursor, min(fin_mes, hasta)))
-        cursor = fin_mes.replace(day=ultimo_dia)
-        cursor = date(cursor.year + (cursor.month // 12),
-                      (cursor.month % 12) + 1, 1)
-    return rangos
+from src import config, storage
+from src.sources import openmeteo, wunderground
 
 
 def correr(desde: date | None = None, hasta: date | None = None) -> None:
     desde = desde or config.FECHA_INICIO
-    hasta = hasta or date.today()
-    for ini, fin in rangos_mensuales(desde, hasta):
-        filas = scraper.obtener_observaciones(ini, fin)
+    hasta = hasta or (date.today() - timedelta(days=1))
+
+    # 1. Histórico horario (Open-Meteo) en bloques anuales para no pedir todo de una.
+    bloque_ini = desde
+    while bloque_ini <= hasta:
+        bloque_fin = min(date(bloque_ini.year, 12, 31), hasta)
+        filas = openmeteo.fetch_archivo(bloque_ini, bloque_fin)
         if filas:
-            storage.upsert_observations(filas)
-        print(f"Backfill {ini}..{fin}: {len(filas)} días")
+            storage.upsert_hourly(filas)
+        bloque_ini = date(bloque_ini.year + 1, 1, 1)
+
+    # 2. Picos diarios reales (Wunderground MPMG).
+    obs = wunderground.obtener_observaciones(desde, hasta)
+    if obs:
+        storage.upsert_observations(obs)
 
 
 if __name__ == "__main__":
-    correr()
+    desde = date.fromisoformat(sys.argv[1]) if len(sys.argv) > 1 else None
+    correr(desde=desde)
