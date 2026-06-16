@@ -1,62 +1,60 @@
 async function cargar() {
   // cache-busting para no leer un data.json viejo de la CDN de Pages
   const datos = await fetch('./data.json?v=' + Date.now()).then(r => r.json());
-  document.getElementById('generado').textContent = datos.generado;
+  document.getElementById('hoy').textContent = datos.hoy;
 
-  // Métricas
-  const m = datos.metricas;
-  const tarjetas = [
-    { etiqueta: 'Aciertos', valor: m.aciertos_pct == null ? '—' : m.aciertos_pct + '%' },
-    { etiqueta: 'Error medio (MAE)', valor: m.mae == null ? '—' : m.mae + ' °C' },
-    { etiqueta: 'Días evaluados', valor: m.n },
-  ];
-  document.getElementById('metricas').innerHTML = tarjetas.map(t =>
-    `<div class="card"><div class="valor">${t.valor}</div><div class="etiqueta">${t.etiqueta}</div></div>`
-  ).join('');
+  // Hero: el pico estimado de hoy + banda.
+  const hero = document.getElementById('hero');
+  if (datos.pico_hoy) {
+    const p = datos.pico_hoy;
+    hero.innerHTML = `
+      <div class="pico">${p.pico_pred.toFixed(1)}°C</div>
+      <div class="banda">banda ${p.p10.toFixed(1)}° – ${p.p90.toFixed(1)}°</div>
+      <div class="nota">última actualización: ${p.hora_decision}:00 hora Panamá</div>`;
+  } else {
+    hero.innerHTML = '<div class="nota">Aún no hay predicción para hoy. Aparecerá dentro de la franja diurna (6am–4pm).</div>';
+  }
 
-  // Próximas predicciones (tarjetas)
-  const fmtDia = f => new Date(f + 'T00:00:00').toLocaleDateString('es', { weekday: 'short' });
-  document.getElementById('preds').innerHTML = datos.predicciones.map(p => `
-    <div class="pred">
-      <div class="dia">${fmtDia(p.fecha_objetivo)}</div>
-      <div class="temp">${p.temp_max_pred_c}°</div>
-      <div class="fecha">${p.fecha_objetivo.slice(5)}</div>
-    </div>`).join('') || '<p>Sin predicciones disponibles.</p>';
-
-  // Gráfica: histórico (últimos 30) + predicciones futuras, conectadas
-  const hist = datos.historico.slice(-30);
-  const labels = hist.map(d => d.fecha).concat(datos.predicciones.map(d => d.fecha_objetivo));
-
-  const serieReal = hist.map(d => d.temp_max_c).concat(datos.predicciones.map(() => null));
-  // La predicción arranca en el último día observado para que la línea quede unida
-  const seriePred = hist.map((d, i) => i === hist.length - 1 ? d.temp_max_c : null)
-                        .concat(datos.predicciones.map(d => d.temp_max_pred_c));
-
-  new Chart(document.getElementById('grafica'), {
+  // Convergencia: p50 + banda p10/p90 a lo largo de las horas de hoy.
+  const c = datos.convergencia_hoy || [];
+  new Chart(document.getElementById('convergencia'), {
     type: 'line',
     data: {
-      labels,
+      labels: c.map(r => r.hora_decision + ':00'),
       datasets: [
-        { label: 'Observado', data: serieReal, borderColor: '#0969da', tension: .3, spanGaps: false },
-        { label: 'Predicción', data: seriePred, borderColor: '#cf222e', borderDash: [6, 4], tension: .3 },
+        { label: 'p90', data: c.map(r => r.p90), borderColor: '#ffd7d5',
+          backgroundColor: 'rgba(207,34,46,.08)', fill: '+1', pointRadius: 0, tension: .3 },
+        { label: 'p10', data: c.map(r => r.p10), borderColor: '#ffd7d5',
+          pointRadius: 0, tension: .3 },
+        { label: 'Pico estimado (p50)', data: c.map(r => r.pico_pred),
+          borderColor: '#cf222e', borderWidth: 2, tension: .3 },
       ],
     },
     options: { scales: { y: { title: { display: true, text: '°C' } } } },
   });
 
-  // Tabla de verificaciones
-  const tbody = document.querySelector('#tabla tbody');
-  if (!datos.evaluaciones.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="color:#888">Aún sin verificaciones: aparecerán cuando un día predicho se observe.</td></tr>';
-  } else {
-    tbody.innerHTML = datos.evaluaciones.slice().reverse().map(e => `
-      <tr>
-        <td>${e.fecha_objetivo}</td>
-        <td>${e.pred_c} °C</td>
-        <td>${e.real_c} °C</td>
-        <td>${e.error_c > 0 ? '+' : ''}${e.error_c} °C</td>
-        <td class="${e.acierto ? 'ok' : 'fail'}">${e.acierto ? '✅ Acierto' : '❌ Fallo'}</td>
-      </tr>`).join('');
-  }
+  // Error por hora de decisión (barras).
+  const e = datos.error_por_hora || [];
+  new Chart(document.getElementById('error'), {
+    type: 'bar',
+    data: {
+      labels: e.map(r => r.hora_decision + ':00'),
+      datasets: [{ label: 'Error medio abs (°C)', data: e.map(r => r.error_medio_abs),
+                   backgroundColor: '#0969da' }],
+    },
+    options: { scales: { y: { beginAtZero: true, title: { display: true, text: '°C' } } } },
+  });
+
+  // Picos reales recientes.
+  const o = datos.observados_recientes || [];
+  new Chart(document.getElementById('observados'), {
+    type: 'line',
+    data: {
+      labels: o.map(r => r.fecha.slice(5)),
+      datasets: [{ label: 'Pico real (°C)', data: o.map(r => r.temp_max_c),
+                   borderColor: '#1a7f37', tension: .3, pointRadius: 2 }],
+    },
+    options: { scales: { y: { title: { display: true, text: '°C' } } } },
+  });
 }
 cargar();
