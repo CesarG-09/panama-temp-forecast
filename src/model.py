@@ -1,65 +1,64 @@
+import json
+from pathlib import Path
+
+import lightgbm as lgb
 import pandas as pd
 
+from src.features import FEATURE_COLS
 
-class Climatologia:
-    """Media del máximo para cada día-del-año, con ventana circular ±N días."""
+_CUANTILES = {"p10": 0.10, "p50": 0.50, "p90": 0.90}
+_PARAMS = {
+    "objective": "quantile",
+    "n_estimators": 300,
+    "learning_rate": 0.05,
+    "num_leaves": 31,
+    "min_child_samples": 20,
+    "verbose": -1,
+}
 
-    def __init__(self, ventana_dias: int = 7):
-        self.ventana = ventana_dias
-        self._hist: pd.DataFrame | None = None
-        self._media_global: float = 0.0
 
-    def ajustar(self, hist: pd.DataFrame) -> "Climatologia":
-        df = hist.copy()
-        df["fecha"] = pd.to_datetime(df["fecha"])
-        df["doy"] = df["fecha"].dt.dayofyear
-        self._hist = df
-        self._media_global = float(df["temp_max_c"].mean())
+class _BoosterWrap:
+    """Envuelve un Booster cargado para exponer .predict como el regresor."""
+
+    def __init__(self, booster: lgb.Booster):
+        self._b = booster
+
+    def predict(self, X):
+        return self._b.predict(X)
+
+
+class ModeloPico:
+    """Tres regresores LightGBM de cuantiles (p10/p50/p90) tras ajustar/predecir."""
+
+    def __init__(self):
+        self._modelos: dict = {}
+
+    def ajustar(self, set_entrenamiento: pd.DataFrame) -> "ModeloPico":
+        X = set_entrenamiento[FEATURE_COLS]
+        y = set_entrenamiento["target"]
+        for nombre, alpha in _CUANTILES.items():
+            m = lgb.LGBMRegressor(alpha=alpha, **_PARAMS)
+            m.fit(X, y)
+            self._modelos[nombre] = m
         return self
 
-    def _media_doy(self, doy: int) -> float:
-        difs = ((self._hist["doy"] - doy + 182) % 365) - 182
-        vals = self._hist.loc[difs.abs() <= self.ventana, "temp_max_c"]
-        if len(vals) == 0:
-            return self._media_global
-        return float(vals.mean())
+    def predecir(self, fila: dict) -> tuple:
+        X = pd.DataFrame([{c: fila.get(c) for c in FEATURE_COLS}])[FEATURE_COLS]
+        vals = {n: float(m.predict(X)[0]) for n, m in self._modelos.items()}
+        # Garantiza monotonía p10 <= p50 <= p90.
+        p10, p50, p90 = sorted((vals["p10"], vals["p50"], vals["p90"]))
+        return round(p10, 1), round(p50, 1), round(p90, 1)
 
-    def predecir(self, fechas) -> list[float]:
-        return [round(self._media_doy(pd.Timestamp(f).dayofyear), 1) for f in fechas]
+    def guardar(self, ruta) -> None:
+        ruta = Path(ruta)
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        payload = {n: m.booster_.model_to_string() for n, m in self._modelos.items()}
+        ruta.write_text(json.dumps(payload))
 
-
-class Predictor:
-    """Climatología + anomalía reciente + corrección de sesgo (lazo de mejora)."""
-
-    def __init__(self, clima: Climatologia | None = None,
-                 dias_anomalia: int = 3, dias_sesgo: int = 14,
-                 decaimiento: float = 0.7):
-        self.clima = clima or Climatologia()
-        self.dias_anomalia = dias_anomalia
-        self.dias_sesgo = dias_sesgo
-        self.decaimiento = decaimiento
-        self.anomalia = 0.0
-        self.sesgo = 0.0
-
-    def ajustar(self, hist: pd.DataFrame, evaluacion: pd.DataFrame | None = None):
-        self.clima.ajustar(hist)
-
-        h = hist.copy()
-        h["fecha"] = pd.to_datetime(h["fecha"])
-        h = h.sort_values("fecha")
-        ult = h.tail(self.dias_anomalia)
-        if len(ult):
-            base = self.clima.predecir(ult["fecha"].tolist())
-            self.anomalia = float((ult["temp_max_c"].to_numpy() - base).mean())
-
-        if evaluacion is not None and len(evaluacion):
-            self.sesgo = float(evaluacion.tail(self.dias_sesgo)["error_c"].mean())
-
-        return self
-
-    def predecir(self, fechas) -> list[float]:
-        # La anomalía reciente decae con el horizonte (la persistencia se diluye:
-        # el día i-ésimo conserva anomalia * decaimiento**i); el sesgo no decae.
-        base = self.clima.predecir(fechas)
-        return [round(b + self.anomalia * (self.decaimiento ** i) - self.sesgo, 1)
-                for i, b in enumerate(base)]
+    @classmethod
+    def cargar(cls, ruta) -> "ModeloPico":
+        payload = json.loads(Path(ruta).read_text())
+        obj = cls()
+        for n, s in payload.items():
+            obj._modelos[n] = _BoosterWrap(lgb.Booster(model_str=s))
+        return obj
