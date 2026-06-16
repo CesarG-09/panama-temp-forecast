@@ -2,7 +2,8 @@ name: Tests
 
 on:
   push:
-    branches: [ml-pico-diario, main]
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 jobs:
