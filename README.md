@@ -16,25 +16,30 @@ confianza** [p10, p90] que se estrecha conforme avanza el día.
 - **Fuentes de datos:**
   - **Open-Meteo** — motor de datos del ML: histórico horario (archivo ERA5 desde
     2020) para entrenar, intradía de hoy (features en vivo) y forecast del día.
-  - **Wunderground MPMG** — la *verdad*: el pico diario real (target del modelo).
+    El **pico diario histórico** (target) se deriva del máximo de ese horario,
+    de modo que el backfill no depende de scraping día-a-día.
+  - **Wunderground MPMG** — la *verdad de la estación* en el lazo en curso: en
+    cada reentrenamiento nocturno su pico real sobreescribe el target de los
+    días recientes (si la API responde).
 - **Features (solo lo conocible hasta la hora H):** calendario (día-del-año
   seno/coseno, mes), máximo-hasta-ahora, temperatura actual y rezagos, tasa de
   subida, humedad, nubosidad y el forecast de Open-Meteo (feature nullable).
 
 ## Flujo (workflows de GitHub Actions)
 
-- **`backfill.yml`** (manual) — carga el histórico horario (Open-Meteo) y los
-  picos diarios (Wunderground) desde 2020.
-- **`train.yml`** (nocturno, 06:00 UTC) — backfill incremental + reentrena los
-  modelos y guarda `models/peak_model.txt`.
+- **`backfill.yml`** (manual) — carga el histórico horario (Open-Meteo) y deriva
+  de él el pico diario histórico, desde 2020. Rápido: sin navegador día-a-día.
+- **`train.yml`** (nocturno, 06:00 UTC) — actualiza los días recientes
+  (Open-Meteo + verdad de Wunderground), reentrena los modelos y guarda
+  `models/peak_model.txt`.
 - **`hourly.yml`** (cada hora 11:00–21:00 UTC = 6am–4pm Panamá) — predice el pico
   de hoy, registra la predicción, evalúa los días cerrados y publica el dashboard.
 
 ## Puesta en marcha
 
-1. **Secret de Wunderground:** repo → Settings → Secrets and variables → Actions →
-   `New repository secret` → nombre `WUNDERGROUND_API_KEY`
-   (ver instrucciones de la apiKey en el historial del proyecto).
+1. **Secret de Wunderground (opcional pero recomendado):** repo → Settings →
+   Secrets and variables → Actions → `New repository secret` → nombre
+   `WUNDERGROUND_API_KEY`. Si falta o caduca, el target cae al derivado de Open-Meteo.
 2. **Habilitar Pages:** Settings → Pages → Source: *GitHub Actions*.
 3. **Cargar el histórico:** Actions → *Backfill histórico* → *Run workflow*
    (deja `2020-01-01`).
@@ -48,8 +53,7 @@ pip install -r requirements.txt
 python -m playwright install chromium   # solo si usas el respaldo de Wunderground
 python -m pytest -v                      # tests
 
-export WUNDERGROUND_API_KEY=...          # (Windows: $env:WUNDERGROUND_API_KEY="...")
-python -m src.backfill 2020-01-01        # carga inicial
+python -m src.backfill 2020-01-01        # carga inicial (Open-Meteo)
 python -m src.train                      # entrena el modelo
 python -m src.predict                    # una corrida de predicción
 ```
