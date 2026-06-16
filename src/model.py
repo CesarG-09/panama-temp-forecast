@@ -17,6 +17,16 @@ _PARAMS = {
 }
 
 
+def _matriz(fuente) -> pd.DataFrame:
+    """Selecciona las columnas de features y las castea a float.
+
+    El cast convierte `None` en `NaN` y garantiza dtype numérico: LightGBM
+    rechaza columnas `object` (p. ej. `forecast_max` nulo en backfill) pero
+    sí maneja `NaN` como valor faltante de forma nativa.
+    """
+    return fuente[FEATURE_COLS].astype(float)
+
+
 class _BoosterWrap:
     """Envuelve un Booster cargado para exponer .predict como el regresor."""
 
@@ -34,7 +44,7 @@ class ModeloPico:
         self._modelos: dict = {}
 
     def ajustar(self, set_entrenamiento: pd.DataFrame) -> "ModeloPico":
-        X = set_entrenamiento[FEATURE_COLS]
+        X = _matriz(set_entrenamiento)
         y = set_entrenamiento["target"]
         for nombre, alpha in _CUANTILES.items():
             m = lgb.LGBMRegressor(alpha=alpha, **_PARAMS)
@@ -43,7 +53,7 @@ class ModeloPico:
         return self
 
     def predecir(self, fila: dict) -> tuple:
-        X = pd.DataFrame([{c: fila.get(c) for c in FEATURE_COLS}])[FEATURE_COLS]
+        X = _matriz(pd.DataFrame([{c: fila.get(c) for c in FEATURE_COLS}]))
         vals = {n: float(m.predict(X)[0]) for n, m in self._modelos.items()}
         # Garantiza monotonía p10 <= p50 <= p90.
         p10, p50, p90 = sorted((vals["p10"], vals["p50"], vals["p90"]))
