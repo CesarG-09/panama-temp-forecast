@@ -1,3 +1,4 @@
+import time
 from datetime import date
 
 import requests
@@ -7,8 +8,35 @@ from src import config
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 HIST_FORECAST_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
-_TIMEOUT = 60
+_TIMEOUT = 90
+_REINTENTOS = 4
+_BACKOFF = 3  # segundos base; espera exponencial entre reintentos
 _HOURLY_VARS = "temperature_2m,relative_humidity_2m,cloud_cover"
+
+
+def _get(url: str, params: dict) -> requests.Response:
+    """GET con reintentos ante timeout/red/5xx; los 4xx no se reintentan.
+
+    Open-Meteo puede tardar en rangos grandes (un año de horario) y dar timeouts
+    transitorios. Sin reintento, un solo hipo tumba todo el backfill, así que se
+    reintenta con espera exponencial. Un 4xx es determinista (p. ej. fecha fuera
+    del rango archivado del forecast histórico) y se propaga de una vez.
+    """
+    ultimo = None
+    for intento in range(_REINTENTOS):
+        try:
+            resp = requests.get(url, params=params, timeout=_TIMEOUT)
+            resp.raise_for_status()
+            return resp
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and 400 <= e.response.status_code < 500:
+                raise
+            ultimo = e
+        except requests.exceptions.RequestException as e:
+            ultimo = e
+        if intento < _REINTENTOS - 1:
+            time.sleep(_BACKOFF * (2 ** intento))
+    raise ultimo
 
 
 def parse_horario(payload: dict) -> list[dict]:
@@ -53,9 +81,7 @@ def fetch_archivo(desde: date, hasta: date) -> list[dict]:
         "hourly": _HOURLY_VARS,
         "timezone": config.TZ,
     }
-    resp = requests.get(ARCHIVE_URL, params=params, timeout=_TIMEOUT)
-    resp.raise_for_status()
-    return parse_horario(resp.json())
+    return parse_horario(_get(ARCHIVE_URL, params).json())
 
 
 def fetch_forecast_max_historico(desde: date, hasta: date) -> list[dict]:
@@ -74,9 +100,7 @@ def fetch_forecast_max_historico(desde: date, hasta: date) -> list[dict]:
         "start_date": desde.isoformat(),
         "end_date": hasta.isoformat(),
     }
-    resp = requests.get(HIST_FORECAST_URL, params=params, timeout=_TIMEOUT)
-    resp.raise_for_status()
-    return parse_forecast_max_diario(resp.json())
+    return parse_forecast_max_diario(_get(HIST_FORECAST_URL, params).json())
 
 
 def fetch_intradia(hoy: date) -> list[dict]:
@@ -89,9 +113,7 @@ def fetch_intradia(hoy: date) -> list[dict]:
         "past_days": 1,
         "forecast_days": 1,
     }
-    resp = requests.get(FORECAST_URL, params=params, timeout=_TIMEOUT)
-    resp.raise_for_status()
-    filas = parse_horario(resp.json())
+    filas = parse_horario(_get(FORECAST_URL, params).json())
     hoy_iso = hoy.isoformat()
     return [f for f in filas if f["timestamp"].startswith(hoy_iso)]
 
@@ -106,8 +128,6 @@ def fetch_forecast_max(hoy: date) -> float | None:
         "start_date": hoy.isoformat(),
         "end_date": hoy.isoformat(),
     }
-    resp = requests.get(FORECAST_URL, params=params, timeout=_TIMEOUT)
-    resp.raise_for_status()
-    daily = resp.json().get("daily", {})
+    daily = _get(FORECAST_URL, params).json().get("daily", {})
     vals = daily.get("temperature_2m_max", [])
     return float(vals[0]) if vals and vals[0] is not None else None

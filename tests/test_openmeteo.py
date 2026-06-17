@@ -1,6 +1,9 @@
 from datetime import date
 from unittest.mock import patch
 
+import pytest
+import requests
+
 from src.sources import openmeteo
 
 
@@ -48,6 +51,18 @@ class _Resp:
         return self._data
 
 
+class _Resp4xx:
+    status_code = 400
+
+    def raise_for_status(self):
+        err = requests.exceptions.HTTPError("400")
+        err.response = self
+        raise err
+
+    def json(self):
+        return {}
+
+
 def test_fetch_archivo_arma_params_y_parsea():
     data = {"hourly": {"time": ["2020-01-01T00:00"], "temperature_2m": [24.0],
                        "relative_humidity_2m": [80], "cloud_cover": [10]}}
@@ -58,6 +73,26 @@ def test_fetch_archivo_arma_params_y_parsea():
     assert kwargs["params"]["start_date"] == "2020-01-01"
     assert kwargs["params"]["end_date"] == "2020-01-02"
     assert kwargs["params"]["timezone"] == "America/Panama"
+
+
+def test_get_reintenta_en_timeout():
+    data = {"hourly": {"time": ["2020-01-01T00:00"], "temperature_2m": [24.0],
+                       "relative_humidity_2m": [80], "cloud_cover": [10]}}
+    efectos = [requests.exceptions.ReadTimeout("timeout"), _Resp(data)]
+    with patch("src.sources.openmeteo.requests.get", side_effect=efectos) as g, \
+         patch("src.sources.openmeteo.time.sleep") as s:
+        filas = openmeteo.fetch_archivo(date(2020, 1, 1), date(2020, 1, 1))
+    assert filas[0]["temp_c"] == 24.0
+    assert g.call_count == 2  # reintentó una vez tras el timeout
+    s.assert_called()  # hubo espera entre intentos
+
+
+def test_get_no_reintenta_en_4xx():
+    with patch("src.sources.openmeteo.requests.get", return_value=_Resp4xx()) as g, \
+         patch("src.sources.openmeteo.time.sleep"):
+        with pytest.raises(requests.exceptions.HTTPError):
+            openmeteo.fetch_forecast_max_historico(date(2020, 1, 1), date(2020, 1, 1))
+    assert g.call_count == 1  # 4xx es determinista: no se reintenta
 
 
 def test_parse_forecast_max_diario_omite_nulos():
