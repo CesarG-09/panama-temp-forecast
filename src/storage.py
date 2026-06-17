@@ -46,6 +46,10 @@ def read_predictions() -> pd.DataFrame:
 def append_prediction(fila: dict) -> None:
     ruta = config.ruta_predicciones()
     df = pd.concat([read_predictions(), pd.DataFrame([fila])], ignore_index=True)
+    # Upsert por (fecha_objetivo, hora_decision): una re-corrida en la misma
+    # hora reemplaza la predicción previa en vez de duplicar el punto.
+    df = df.drop_duplicates(["fecha_objetivo", "hora_decision"], keep="last") \
+        .sort_values(["fecha_objetivo", "hora_decision"])
     ruta.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(ruta, index=False)
 

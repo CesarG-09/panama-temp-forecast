@@ -35,6 +35,21 @@ def test_predictions_append(tmp_path, monkeypatch):
     assert set(df.columns) == set(fila.keys())
 
 
+def test_predictions_upsert_misma_hora(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    fila = {"run_timestamp": "2026-06-17T08:00:00", "fecha_objetivo": "2026-06-17",
+            "hora_decision": 8, "pico_pred": 28.6, "p10": 27.4, "p90": 30.1,
+            "modelo_version": "gbm-q-v1"}
+    storage.append_prediction(fila)
+    # Re-corrida en la misma hora: debe reemplazar, no duplicar.
+    storage.append_prediction({**fila, "run_timestamp": "2026-06-17T08:30:00",
+                               "pico_pred": 29.1})
+    df = storage.read_predictions()
+    assert len(df) == 1
+    assert df.iloc[0]["pico_pred"] == 29.1
+    assert df.iloc[0]["run_timestamp"] == "2026-06-17T08:30:00"
+
+
 def test_evaluation_write_read(tmp_path, monkeypatch):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
     ev = pd.DataFrame([{"fecha_objetivo": "2026-06-15", "hora_decision": 12,
