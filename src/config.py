@@ -41,5 +41,9 @@ def ruta_historico_horario() -> Path:
     return data_dir() / "hourly_history.csv"
 
 
+def ruta_forecast() -> Path:
+    return data_dir() / "forecast_history.csv"
+
+
 def ruta_modelo() -> Path:
     return model_dir() / "peak_model.txt"

@@ -33,3 +33,12 @@ def test_construir_set_omite_dias_sin_observacion():
     obs = _observaciones().iloc[:1]  # solo 2026-06-14
     df = dataset.construir_set(_hist_horario(), obs)
     assert set(df["fecha_objetivo"].unique()) == {"2026-06-14"}
+
+
+def test_construir_set_usa_forecast_por_fecha():
+    fpf = {"2026-06-14": 31.5, "2026-06-15": 33.2}
+    df = dataset.construir_set(_hist_horario(), _observaciones(), fpf)
+    fila_14 = df[df["fecha_objetivo"] == "2026-06-14"].iloc[0]
+    assert fila_14["forecast_max"] == 31.5
+    fila_15 = df[df["fecha_objetivo"] == "2026-06-15"].iloc[0]
+    assert fila_15["forecast_max"] == 33.2

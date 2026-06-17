@@ -6,6 +6,7 @@ from src import config
 
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
+HIST_FORECAST_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 _TIMEOUT = 60
 _HOURLY_VARS = "temperature_2m,relative_humidity_2m,cloud_cover"
 
@@ -30,6 +31,18 @@ def parse_horario(payload: dict) -> list[dict]:
     return filas
 
 
+def parse_forecast_max_diario(payload: dict) -> list[dict]:
+    """Convierte la respuesta `daily.temperature_2m_max` en filas {fecha, forecast_max}."""
+    d = payload.get("daily", {})
+    fechas = d.get("time", [])
+    maxs = d.get("temperature_2m_max", [])
+    filas = []
+    for i, f in enumerate(fechas):
+        if i < len(maxs) and maxs[i] is not None:
+            filas.append({"fecha": f, "forecast_max": float(maxs[i])})
+    return filas
+
+
 def fetch_archivo(desde: date, hasta: date) -> list[dict]:
     """Histórico horario [desde, hasta] desde el archivo ERA5 de Open-Meteo."""
     params = {
@@ -43,6 +56,27 @@ def fetch_archivo(desde: date, hasta: date) -> list[dict]:
     resp = requests.get(ARCHIVE_URL, params=params, timeout=_TIMEOUT)
     resp.raise_for_status()
     return parse_horario(resp.json())
+
+
+def fetch_forecast_max_historico(desde: date, hasta: date) -> list[dict]:
+    """Pronóstico de máxima diaria realmente emitido en el pasado [desde, hasta].
+
+    Usa la Historical Forecast API de Open-Meteo (archivo de los pronósticos
+    históricos), de modo que el `forecast_max` de entrenamiento es del mismo
+    tipo (un pronóstico con su error real) que el que se usa en vivo. La API
+    no cubre los años más tempranos; el llamador tolera que falte.
+    """
+    params = {
+        "latitude": config.LAT,
+        "longitude": config.LON,
+        "daily": "temperature_2m_max",
+        "timezone": config.TZ,
+        "start_date": desde.isoformat(),
+        "end_date": hasta.isoformat(),
+    }
+    resp = requests.get(HIST_FORECAST_URL, params=params, timeout=_TIMEOUT)
+    resp.raise_for_status()
+    return parse_forecast_max_diario(resp.json())
 
 
 def fetch_intradia(hoy: date) -> list[dict]:

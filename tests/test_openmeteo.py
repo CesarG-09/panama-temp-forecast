@@ -60,6 +60,23 @@ def test_fetch_archivo_arma_params_y_parsea():
     assert kwargs["params"]["timezone"] == "America/Panama"
 
 
+def test_parse_forecast_max_diario_omite_nulos():
+    payload = {"daily": {"time": ["2024-06-01", "2024-06-02"],
+                         "temperature_2m_max": [33.1, None]}}
+    filas = openmeteo.parse_forecast_max_diario(payload)
+    assert filas == [{"fecha": "2024-06-01", "forecast_max": 33.1}]
+
+
+def test_fetch_forecast_max_historico_arma_params_y_parsea():
+    data = {"daily": {"time": ["2024-06-01"], "temperature_2m_max": [33.1]}}
+    with patch("src.sources.openmeteo.requests.get", return_value=_Resp(data)) as g:
+        filas = openmeteo.fetch_forecast_max_historico(date(2024, 6, 1), date(2024, 6, 1))
+    assert filas == [{"fecha": "2024-06-01", "forecast_max": 33.1}]
+    args, kwargs = g.call_args
+    assert args[0] == openmeteo.HIST_FORECAST_URL
+    assert kwargs["params"]["daily"] == "temperature_2m_max"
+
+
 def test_fetch_forecast_maxima_de_hoy():
     data = {"daily": {"time": ["2026-06-16"], "temperature_2m_max": [33.4]}}
     with patch("src.sources.openmeteo.requests.get", return_value=_Resp(data)):

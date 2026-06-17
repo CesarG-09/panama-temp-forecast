@@ -18,13 +18,24 @@ def picos_diarios(hourly: pd.DataFrame) -> list[dict]:
             for _, r in g.iterrows()]
 
 
+def _backfill_forecast(desde: date, hasta: date) -> None:
+    """Descarga el pronóstico de máxima histórico y lo guarda; tolera años sin cobertura."""
+    try:
+        fcst = openmeteo.fetch_forecast_max_historico(desde, hasta)
+        if fcst:
+            storage.upsert_forecast(fcst)
+    except Exception:
+        pass  # la Historical Forecast API no cubre los años más tempranos
+
+
 def correr(desde: date | None = None, hasta: date | None = None) -> None:
-    """Carga histórica: horario de Open-Meteo + pico diario derivado de ese horario.
+    """Carga histórica: horario de Open-Meteo + pico diario derivado + forecast_max.
 
     El target histórico se deriva del propio archivo horario de Open-Meteo (máximo
     por día), evitando ~2.300 cargas día-a-día por navegador de Wunderground. La
     verdad de la estación MPMG (Wunderground) se superpone en los días recientes
-    desde `actualizar_reciente` (lazo en curso).
+    desde `actualizar_reciente` (lazo en curso). Además guarda el pronóstico de
+    máxima realmente emitido (Historical Forecast API) como feature.
     """
     desde = desde or config.FECHA_INICIO
     hasta = hasta or (date.today() - timedelta(days=1))
@@ -35,13 +46,14 @@ def correr(desde: date | None = None, hasta: date | None = None) -> None:
         filas = openmeteo.fetch_archivo(bloque_ini, bloque_fin)
         if filas:
             storage.upsert_hourly(filas)
+        _backfill_forecast(bloque_ini, bloque_fin)
         bloque_ini = date(bloque_ini.year + 1, 1, 1)
 
     storage.upsert_observations(picos_diarios(storage.read_hourly()))
 
 
 def actualizar_reciente(dias: int = 7) -> None:
-    """Refresca los últimos `dias` días: horario de Open-Meteo + pico diario.
+    """Refresca los últimos `dias` días: horario + pico diario + forecast_max.
 
     El target reciente usa Open-Meteo como base y, si la API de Wunderground
     responde, lo sobreescribe con el pico real de la estación MPMG (la verdad).
@@ -54,6 +66,8 @@ def actualizar_reciente(dias: int = 7) -> None:
     if filas:
         storage.upsert_hourly(filas)
         storage.upsert_observations(picos_diarios(pd.DataFrame(filas)))
+
+    _backfill_forecast(desde, hasta)
 
     try:
         obs = wunderground.fetch_via_api(desde, hasta)
