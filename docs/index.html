@@ -10,7 +10,8 @@
     h1 { font-size: 1.5rem; }
     h2 { font-size: 1.1rem; margin-top: 2rem; }
     .hero { background: #fff5f5; border: 1px solid #ffd7d5; border-radius: 14px; padding: 1.5rem; text-align: center; margin: 1rem 0; }
-    .hero .pico { font-size: 3rem; font-weight: 800; color: #cf222e; line-height: 1; }
+    .hero .rotulo { font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #cf222e; }
+    .hero .pico { font-size: 3rem; font-weight: 800; color: #cf222e; line-height: 1; margin-top: .2rem; }
     .hero .banda { font-size: 1rem; color: #884; margin-top: .4rem; }
     .hero .nota { font-size: .8rem; color: #888; margin-top: .5rem; }
     canvas { margin-top: .5rem; }
@@ -19,11 +20,12 @@
 </head>
 <body>
   <h1>🌡️ Pico de temperatura de hoy — Ciudad de Panamá (MPMG)</h1>
-  <p>Predicción por Machine Learning del <strong>pico (máxima) de hoy</strong>, refinada cada hora con los datos observados durante el día.</p>
+  <p>Predicción por Machine Learning de la <strong>máxima de hoy</strong> (el techo que alcanzará la temperatura, normalmente entre 12 y 2 pm), refinada cada hora con los datos observados durante el día. <strong>No</strong> es la temperatura de la hora actual.</p>
 
   <div class="hero" id="hero"></div>
 
   <h2>Cómo converge la predicción durante el día</h2>
+  <p style="font-size:.85rem;color:#666">Cada punto es el mismo pico máximo del día, recalculado a esa hora: más tarde → más data observada → banda más angosta.</p>
   <canvas id="convergencia" height="120"></canvas>
 
   <h2>Precisión por hora de decisión</h2>

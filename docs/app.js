@@ -3,14 +3,16 @@ async function cargar() {
   const datos = await fetch('./data.json?v=' + Date.now()).then(r => r.json());
   document.getElementById('hoy').textContent = datos.hoy;
 
-  // Hero: el pico estimado de hoy + banda.
+  // Hero: el pico (máxima) estimado de hoy + banda. NO es la temperatura de
+  // la hora actual: es el techo del día, que suele darse cerca del mediodía.
   const hero = document.getElementById('hero');
   if (datos.pico_hoy) {
     const p = datos.pico_hoy;
     hero.innerHTML = `
+      <div class="rotulo">Pico máximo previsto para HOY</div>
       <div class="pico">${p.pico_pred.toFixed(1)}°C</div>
       <div class="banda">banda ${p.p10.toFixed(1)}° – ${p.p90.toFixed(1)}°</div>
-      <div class="nota">última actualización: ${p.hora_decision}:00 hora Panamá</div>`;
+      <div class="nota">La máxima del día suele ocurrir entre 12 y 2 pm · estimación calculada a las ${p.hora_decision}:00 hora Panamá y afinada cada hora</div>`;
   } else {
     hero.innerHTML = '<div class="nota">Aún no hay predicción para hoy. Aparecerá dentro de la franja diurna (6am–4pm).</div>';
   }
