@@ -4,7 +4,7 @@
     "pico_pred": 27.1,
     "p10": 27.0,
     "p90": 27.4,
-    "hora_decision": 12
+    "hora_decision": 15
   },
   "curva_hoy": [
     {
@@ -58,6 +58,18 @@
     {
       "hora": 12,
       "temp_c": 25.2
+    },
+    {
+      "hora": 13,
+      "temp_c": 25.8
+    },
+    {
+      "hora": 14,
+      "temp_c": 26.1
+    },
+    {
+      "hora": 15,
+      "temp_c": 26.5
     }
   ],
   "convergencia_hoy": [
@@ -75,6 +87,12 @@
     },
     {
       "hora_decision": 12,
+      "pico_pred": 27.1,
+      "p10": 27.0,
+      "p90": 27.4
+    },
+    {
+      "hora_decision": 15,
       "pico_pred": 27.1,
       "p10": 27.0,
       "p90": 27.4
