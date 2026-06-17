@@ -1,9 +1,9 @@
 {
   "hoy": "2026-06-17",
   "pico_hoy": {
-    "pico_pred": 28.0,
-    "p10": 27.3,
-    "p90": 29.6,
+    "pico_pred": 26.5,
+    "p10": 26.4,
+    "p90": 27.4,
     "hora_decision": 9
   },
   "convergencia_hoy": [
@@ -15,9 +15,9 @@
     },
     {
       "hora_decision": 9,
-      "pico_pred": 28.0,
-      "p10": 27.3,
-      "p90": 29.6
+      "pico_pred": 26.5,
+      "p10": 26.4,
+      "p90": 27.4
     }
   ],
   "error_por_hora": [],
@@ -108,7 +108,7 @@
     },
     {
       "fecha": "2026-06-08",
-      "temp_max_c": 29.0
+      "temp_max_c": 27.9
     },
     {
       "fecha": "2026-06-09",
