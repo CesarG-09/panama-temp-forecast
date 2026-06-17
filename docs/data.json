@@ -1,10 +1,10 @@
 {
   "hoy": "2026-06-17",
   "pico_hoy": {
-    "pico_pred": 28.6,
-    "p10": 27.4,
-    "p90": 30.1,
-    "hora_decision": 8
+    "pico_pred": 28.0,
+    "p10": 27.3,
+    "p90": 29.6,
+    "hora_decision": 9
   },
   "convergencia_hoy": [
     {
@@ -14,10 +14,10 @@
       "p90": 30.1
     },
     {
-      "hora_decision": 8,
-      "pico_pred": 28.6,
-      "p10": 27.4,
-      "p90": 30.1
+      "hora_decision": 9,
+      "pico_pred": 28.0,
+      "p10": 27.3,
+      "p90": 29.6
     }
   ],
   "error_por_hora": [],
