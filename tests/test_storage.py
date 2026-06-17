@@ -23,6 +23,16 @@ def test_hourly_history_roundtrip_dedup(tmp_path, monkeypatch):
     assert df.iloc[0]["temp_c"] == 25.0
 
 
+def test_forecast_roundtrip_dedup(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    storage.upsert_forecast([{"fecha": "2026-06-10", "forecast_max": 32.0}])
+    storage.upsert_forecast([{"fecha": "2026-06-10", "forecast_max": 32.8},
+                             {"fecha": "2026-06-11", "forecast_max": 31.0}])
+    df = storage.read_forecast()
+    assert len(df) == 2
+    assert df.set_index("fecha").loc["2026-06-10", "forecast_max"] == 32.8
+
+
 def test_predictions_append(tmp_path, monkeypatch):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
     fila = {"run_timestamp": "2026-06-16T11:00:00", "fecha_objetivo": "2026-06-16",
