@@ -10,9 +10,17 @@ permissions:
   pages: write
   id-token: write
 
+# Comparte grupo con pages.yml para no solapar despliegues al entorno github-pages.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   predict:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -29,18 +37,15 @@ jobs:
           git add data/ docs/data.json
           git commit -m "predict: $(date -u +%Y-%m-%dT%H:%M)" || echo "Sin cambios"
           git push
-
-  deploy-pages:
-    needs: predict
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      # Despliega docs/ desde el workspace actual (con el data.json recién
+      # escrito), no desde el commit que disparó la corrida. Así el sitio
+      # publicado refleja la predicción que se acaba de generar.
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+      - name: Subir artefacto del dashboard
+        uses: actions/upload-pages-artifact@v3
         with:
           path: docs
-      - id: deployment
+      - name: Desplegar en Pages
+        id: deployment
         uses: actions/deploy-pages@v4
