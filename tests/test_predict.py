@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from unittest.mock import patch
 import numpy as np
@@ -43,6 +44,12 @@ def test_predict_registra_prediccion_de_hoy(tmp_path, monkeypatch):
     assert fila["fecha_objetivo"] == "2026-06-16"
     assert fila["hora_decision"] == 10
     assert fila["p10"] <= fila["pico_pred"] <= fila["p90"]
+
+    # El data.json incluye la curva observada de hoy (horas 0..10).
+    datos = json.loads((tmp_path / "data.json").read_text())
+    assert len(datos["curva_hoy"]) == 11
+    assert datos["curva_hoy"][0] == {"hora": 0, "temp_c": 24.0}
+    assert datos["curva_hoy"][-1]["hora"] == 10
 
 
 def test_predict_fuera_de_franja_no_registra(tmp_path, monkeypatch):

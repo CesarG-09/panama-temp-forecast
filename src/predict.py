@@ -15,6 +15,16 @@ def _hora_local(hoy: date) -> int:
     return datetime.now(ZoneInfo(config.TZ)).hour
 
 
+def _curva_observada(intradia: pd.DataFrame, hora: int) -> list[dict]:
+    """Temperatura de hoy hora a hora, solo hasta la hora actual (lo observado)."""
+    filas = []
+    for _, r in intradia.sort_values("timestamp").iterrows():
+        h = int(r["timestamp"][11:13])
+        if h <= hora:
+            filas.append({"hora": h, "temp_c": round(float(r["temp_c"]), 1)})
+    return filas
+
+
 def correr(hoy: date | None = None) -> None:
     hoy = hoy or datetime.now(ZoneInfo(config.TZ)).date()
     hora = _hora_local(hoy)
@@ -52,7 +62,8 @@ def correr(hoy: date | None = None) -> None:
     storage.write_evaluation(evaluacion)
 
     payload = export.construir_payload(predicciones, observaciones, evaluacion,
-                                       hoy=hoy.isoformat())
+                                       hoy=hoy.isoformat(),
+                                       curva_hoy=_curva_observada(intradia, hora))
     export.exportar(RUTA_DATA_JSON, payload)
 
 

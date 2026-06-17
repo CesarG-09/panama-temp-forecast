@@ -23,7 +23,18 @@ def test_construir_payload_estructura():
     assert payload["pico_hoy"]["p10"] == 32.2
     assert payload["pico_hoy"]["p90"] == 33.4
     assert len(payload["convergencia_hoy"]) == 2
+    assert payload["curva_hoy"] == []  # sin curva por defecto
     assert "error_por_hora" in payload
+
+
+def test_construir_payload_incluye_curva():
+    curva = [{"hora": 6, "temp_c": 25.0}, {"hora": 7, "temp_c": 26.1}]
+    payload = export.construir_payload(pd.DataFrame(columns=["fecha_objetivo", "hora_decision",
+                                                            "pico_pred", "p10", "p90"]),
+                                       pd.DataFrame(columns=["fecha", "temp_max_c"]),
+                                       pd.DataFrame(columns=["hora_decision", "error_c"]),
+                                       hoy="2026-06-16", curva_hoy=curva)
+    assert payload["curva_hoy"] == curva
 
 
 def test_exportar_escribe_json(tmp_path):

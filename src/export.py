@@ -5,7 +5,8 @@ import pandas as pd
 
 
 def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
-                      evaluacion: pd.DataFrame, hoy: str) -> dict:
+                      evaluacion: pd.DataFrame, hoy: str,
+                      curva_hoy: list | None = None) -> dict:
     hoy_preds = predicciones[predicciones["fecha_objetivo"] == hoy] \
         .sort_values("hora_decision")
 
@@ -35,6 +36,7 @@ def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
     return {
         "hoy": hoy,
         "pico_hoy": pico_hoy,
+        "curva_hoy": curva_hoy or [],
         "convergencia_hoy": convergencia,
         "error_por_hora": error_por_hora,
         "observados_recientes": observados,

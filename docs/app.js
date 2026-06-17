@@ -6,8 +6,8 @@ async function cargar() {
   // Hero: el pico (máxima) estimado de hoy + banda. NO es la temperatura de
   // la hora actual: es el techo del día, que suele darse cerca del mediodía.
   const hero = document.getElementById('hero');
-  if (datos.pico_hoy) {
-    const p = datos.pico_hoy;
+  const p = datos.pico_hoy;
+  if (p) {
     hero.innerHTML = `
       <div class="rotulo">Pico máximo previsto para HOY</div>
       <div class="pico">${p.pico_pred.toFixed(1)}°C</div>
@@ -17,22 +17,37 @@ async function cargar() {
     hero.innerHTML = '<div class="nota">Aún no hay predicción para hoy. Aparecerá dentro de la franja diurna (6am–4pm).</div>';
   }
 
-  // Convergencia: p50 + banda p10/p90 a lo largo de las horas de hoy.
-  const c = datos.convergencia_hoy || [];
-  new Chart(document.getElementById('convergencia'), {
+  // Curva del día: la temperatura observada hoy subiendo, con la banda del
+  // pico máximo previsto superpuesta (suele alcanzarse cerca del mediodía).
+  const curva = datos.curva_hoy || [];
+  const HMIN = 6, HMAX = 18;
+  const labels = [];
+  for (let h = HMIN; h <= HMAX; h++) labels.push(h + ':00');
+  const porHora = {};
+  curva.forEach(r => { porHora[r.hora] = r.temp_c; });
+  const obs = labels.map((_, i) => ((HMIN + i) in porHora ? porHora[HMIN + i] : null));
+
+  const datasets = [{
+    label: 'Temperatura observada hoy', data: obs, borderColor: '#cf222e',
+    backgroundColor: '#cf222e', borderWidth: 2, tension: .3, spanGaps: false, pointRadius: 2,
+  }];
+  if (p) {
+    const n = labels.length;
+    datasets.push(
+      { label: 'Pico previsto (p90)', data: Array(n).fill(p.p90),
+        borderColor: 'rgba(207,34,46,.25)', borderDash: [4, 4], pointRadius: 0,
+        fill: '+1', backgroundColor: 'rgba(207,34,46,.08)' },
+      { label: 'Pico previsto (p10)', data: Array(n).fill(p.p10),
+        borderColor: 'rgba(207,34,46,.25)', borderDash: [4, 4], pointRadius: 0 },
+      { label: 'Pico previsto (p50)', data: Array(n).fill(p.pico_pred),
+        borderColor: '#cf222e', borderDash: [6, 3], borderWidth: 1.5, pointRadius: 0 },
+    );
+  }
+  new Chart(document.getElementById('curva'), {
     type: 'line',
-    data: {
-      labels: c.map(r => r.hora_decision + ':00'),
-      datasets: [
-        { label: 'p90', data: c.map(r => r.p90), borderColor: '#ffd7d5',
-          backgroundColor: 'rgba(207,34,46,.08)', fill: '+1', pointRadius: 0, tension: .3 },
-        { label: 'p10', data: c.map(r => r.p10), borderColor: '#ffd7d5',
-          pointRadius: 0, tension: .3 },
-        { label: 'Pico estimado (p50)', data: c.map(r => r.pico_pred),
-          borderColor: '#cf222e', borderWidth: 2, tension: .3 },
-      ],
-    },
-    options: { scales: { y: { title: { display: true, text: '°C' } } } },
+    data: { labels, datasets },
+    options: { scales: { y: { title: { display: true, text: '°C' } },
+                         x: { title: { display: true, text: 'hora del día (Panamá)' } } } },
   });
 
   // Error por hora de decisión (barras).
