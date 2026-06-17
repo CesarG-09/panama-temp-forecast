@@ -12,6 +12,12 @@
       "pico_pred": 28.6,
       "p10": 27.4,
       "p90": 30.1
+    },
+    {
+      "hora_decision": 8,
+      "pico_pred": 28.6,
+      "p10": 27.4,
+      "p90": 30.1
     }
   ],
   "error_por_hora": [],
