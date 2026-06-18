@@ -47,6 +47,45 @@ def fetch_via_api(desde, hasta) -> list[dict]:
     return parse_historical_json(resp.json())
 
 
+def parse_curva_intradia(payload: dict, fecha) -> list[dict]:
+    """Temperatura máxima por hora local de `fecha` (lo que Wunderground muestra por hora).
+
+    Agrupa las observaciones por hora en horario de Panamá y toma el máximo de cada
+    hora, igual que la tabla horaria del historial diario de Wunderground.
+    """
+    tz = ZoneInfo(config.TZ)
+    fecha_iso = fecha.isoformat()
+    por_hora: dict[int, float] = {}
+    for obs in payload.get("observations", []):
+        temp = obs.get("temp")
+        ts = obs.get("valid_time_gmt")
+        if temp is None or ts is None:
+            continue
+        dt = datetime.fromtimestamp(ts, tz=tz)
+        if dt.date().isoformat() != fecha_iso:
+            continue
+        if dt.hour not in por_hora or temp > por_hora[dt.hour]:
+            por_hora[dt.hour] = float(temp)
+    return [{"hora": h, "temp_c": round(por_hora[h], 1)} for h in sorted(por_hora)]
+
+
+def fetch_curva_intradia(fecha) -> list[dict]:
+    """Curva horaria observada de `fecha` desde la estación MPMG (API de Weather.com)."""
+    api_key = os.environ.get("WUNDERGROUND_API_KEY")
+    if not api_key:
+        raise RuntimeError("Falta la variable de entorno WUNDERGROUND_API_KEY")
+    params = {
+        "apiKey": api_key,
+        "units": "m",
+        "startDate": fecha.strftime("%Y%m%d"),
+        "endDate": fecha.strftime("%Y%m%d"),
+    }
+    resp = requests.get(API_URL.format(station=config.ESTACION), params=params,
+                        headers=_HEADERS, timeout=_TIMEOUT)
+    resp.raise_for_status()
+    return parse_curva_intradia(resp.json(), fecha)
+
+
 def f_a_c(f: float) -> float:
     return round((f - 32) * 5 / 9, 1)
 

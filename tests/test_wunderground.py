@@ -13,3 +13,26 @@ def test_parse_historical_json_agrupa_por_dia_y_toma_maximo():
 
 def test_f_a_c_convierte_fahrenheit():
     assert wunderground.f_a_c(89.6) == 32.0
+
+
+def test_parse_curva_intradia_toma_maximo_por_hora_local():
+    from datetime import date
+    # 1577880000 = 2020-01-01 12:00 UTC = 07:00 Panamá (UTC-5)
+    payload = {"observations": [
+        {"valid_time_gmt": 1577880000, "temp": 28.0},   # 07:00 -> hora 7
+        {"valid_time_gmt": 1577881800, "temp": 30.0},   # 07:30 -> hora 7 (mayor)
+        {"valid_time_gmt": 1577883600, "temp": 31.0},   # 08:00 -> hora 8
+    ]}
+    curva = wunderground.parse_curva_intradia(payload, date(2020, 1, 1))
+    assert curva == [{"hora": 7, "temp_c": 30.0}, {"hora": 8, "temp_c": 31.0}]
+
+
+def test_parse_curva_intradia_excluye_otras_fechas_y_nulos():
+    from datetime import date
+    payload = {"observations": [
+        {"valid_time_gmt": 1577880000, "temp": 28.0},   # 2020-01-01 07:00 Panamá
+        {"valid_time_gmt": 1577966400, "temp": 33.0},   # 2020-01-02 07:00 Panamá (otra fecha)
+        {"valid_time_gmt": 1577883600, "temp": None},   # nulo, se ignora
+    ]}
+    curva = wunderground.parse_curva_intradia(payload, date(2020, 1, 1))
+    assert curva == [{"hora": 7, "temp_c": 28.0}]

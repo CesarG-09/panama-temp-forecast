@@ -6,7 +6,7 @@ import pandas as pd
 
 from src import config, evaluate, export, features, storage
 from src.model import ModeloPico
-from src.sources import openmeteo
+from src.sources import openmeteo, wunderground
 
 RUTA_DATA_JSON = Path(__file__).resolve().parent.parent / "docs" / "data.json"
 
@@ -16,13 +16,30 @@ def _hora_local(hoy: date) -> int:
 
 
 def _curva_observada(intradia: pd.DataFrame, hora: int) -> list[dict]:
-    """Temperatura de hoy hora a hora, solo hasta la hora actual (lo observado)."""
+    """Temperatura de hoy hora a hora (Open-Meteo), solo hasta la hora actual.
+
+    Respaldo cuando la estación MPMG no responde; ver `_curva_observada_mpmg`.
+    """
     filas = []
     for _, r in intradia.sort_values("timestamp").iterrows():
         h = int(r["timestamp"][11:13])
         if h <= hora:
             filas.append({"hora": h, "temp_c": round(float(r["temp_c"]), 1)})
     return filas
+
+
+def _curva_observada_mpmg(fecha: date, hora: int) -> list[dict] | None:
+    """Curva horaria observada de hoy desde la estación real MPMG (Wunderground).
+
+    Es la misma fuente que la tabla horaria de wunderground.com, así el dashboard
+    coincide con lo que el usuario ve allí. Devuelve None si la API no responde
+    (sin clave, error de red…) para que el llamador caiga a Open-Meteo.
+    """
+    try:
+        curva = wunderground.fetch_curva_intradia(fecha)
+    except Exception:
+        return None
+    return [c for c in curva if c["hora"] <= hora]
 
 
 def correr(hoy: date | None = None) -> None:
@@ -61,9 +78,15 @@ def correr(hoy: date | None = None) -> None:
     evaluacion = evaluate.evaluar(predicciones, observaciones)
     storage.write_evaluation(evaluacion)
 
+    # La curva observada sale de la estación real MPMG (Wunderground) para que
+    # coincida con su tabla horaria; si la API falla, cae a Open-Meteo.
+    curva = _curva_observada_mpmg(hoy, hora)
+    if curva is None:
+        curva = _curva_observada(intradia, hora)
+
     payload = export.construir_payload(predicciones, observaciones, evaluacion,
                                        hoy=hoy.isoformat(),
-                                       curva_hoy=_curva_observada(intradia, hora))
+                                       curva_hoy=curva)
     export.exportar(RUTA_DATA_JSON, payload)
 
 
