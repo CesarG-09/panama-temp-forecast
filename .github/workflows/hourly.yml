@@ -29,6 +29,8 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
       - name: Predecir el pico de hoy
+        env:
+          WUNDERGROUND_API_KEY: ${{ secrets.WUNDERGROUND_API_KEY }}
         run: python -m src.predict
       - name: Commit de la predicción
         run: |
