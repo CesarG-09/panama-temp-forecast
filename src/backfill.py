@@ -1,3 +1,4 @@
+import calendar
 import sys
 from datetime import date, timedelta
 
@@ -28,14 +29,43 @@ def _backfill_forecast(desde: date, hasta: date) -> None:
         pass  # la Historical Forecast API no cubre los años más tempranos
 
 
-def correr(desde: date | None = None, hasta: date | None = None) -> None:
-    """Carga histórica: horario de Open-Meteo + pico diario derivado + forecast_max.
+def _corregir_con_wunderground(desde: date, hasta: date) -> None:
+    """Sobreescribe el target derivado de Open-Meteo con la verdad real de la estación MPMG.
 
-    El target histórico se deriva del propio archivo horario de Open-Meteo (máximo
-    por día), evitando ~2.300 cargas día-a-día por navegador de Wunderground. La
-    verdad de la estación MPMG (Wunderground) se superpone en los días recientes
-    desde `actualizar_reciente` (lazo en curso). Además guarda el pronóstico de
-    máxima realmente emitido (Historical Forecast API) como feature.
+    Open-Meteo/ERA5 tiene un sesgo frío sistemático de ~2-3 °C respecto a las
+    mediciones reales del aeropuerto porque es un promedio de celda de ~31 km, no
+    un dato puntual. Esta función corrige ese sesgo pidiendo los datos mensuales a
+    la API de Wunderground y pisando lo que haya en observations.csv. Si la API
+    falla (sin clave, límite de tasa, etc.) se mantiene el dato de Open-Meteo para
+    ese mes sin interrumpir el resto.
+    """
+    cursor = desde
+    while cursor <= hasta:
+        ultimo_dia = calendar.monthrange(cursor.year, cursor.month)[1]
+        fin_mes = min(date(cursor.year, cursor.month, ultimo_dia), hasta)
+        try:
+            obs = wunderground.fetch_via_api(cursor, fin_mes)
+            if obs:
+                storage.upsert_observations(obs)
+                print(f"  Wunderground {cursor}..{fin_mes}: {len(obs)} días corregidos")
+        except Exception as e:
+            print(f"  Wunderground {cursor}..{fin_mes}: sin corrección ({e})")
+        cursor = fin_mes + timedelta(days=1)
+
+
+def correr(desde: date | None = None, hasta: date | None = None) -> None:
+    """Carga histórica: horario de Open-Meteo + pico diario derivado + corrección con MPMG.
+
+    Paso 1 – Open-Meteo (ERA5): descarga rápida del historial horario y deriva el
+    pico diario. Evita las ~2.300 cargas día-a-día por navegador de Wunderground.
+
+    Paso 2 – Corrección con Wunderground (API): sobreescribe el target derivado de
+    ERA5 con la medición real de la estación MPMG mes a mes. ERA5 tiene un sesgo
+    frío de ~2-3 °C respecto al aeropuerto; esta corrección elimina esa diferencia.
+    Si la clave WUNDERGROUND_API_KEY no está disponible se omite silenciosamente.
+
+    Además guarda el pronóstico de máxima realmente emitido (Historical Forecast API)
+    como feature de entrenamiento.
     """
     desde = desde or config.FECHA_INICIO
     hasta = hasta or (date.today() - timedelta(days=1))
@@ -43,6 +73,7 @@ def correr(desde: date | None = None, hasta: date | None = None) -> None:
     bloque_ini = desde
     while bloque_ini <= hasta:
         bloque_fin = min(date(bloque_ini.year, 12, 31), hasta)
+        print(f"Open-Meteo {bloque_ini}..{bloque_fin}…")
         filas = openmeteo.fetch_archivo(bloque_ini, bloque_fin)
         if filas:
             storage.upsert_hourly(filas)
@@ -50,6 +81,9 @@ def correr(desde: date | None = None, hasta: date | None = None) -> None:
         bloque_ini = date(bloque_ini.year + 1, 1, 1)
 
     storage.upsert_observations(picos_diarios(storage.read_hourly()))
+
+    print("Corrigiendo con datos reales de Wunderground MPMG…")
+    _corregir_con_wunderground(desde, hasta)
 
 
 def actualizar_reciente(dias: int = 7) -> None:

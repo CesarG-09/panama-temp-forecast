@@ -52,6 +52,31 @@ def test_backfill_tolera_forecast_sin_cobertura(tmp_path, monkeypatch):
     assert len(storage.read_forecast()) == 0
 
 
+def test_backfill_correr_sobreescribe_con_wunderground(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    horas = [{"timestamp": "2020-01-01T14:00", "temp_c": 30.0, "humedad": 70.0, "nubosidad": 30.0}]
+    wu = [{"fecha": "2020-01-01", "temp_max_c": 33.0}]  # medición real MPMG > ERA5
+    with patch("src.backfill.openmeteo.fetch_archivo", return_value=horas), \
+         patch("src.backfill.openmeteo.fetch_forecast_max_historico", return_value=[]), \
+         patch("src.backfill.wunderground.fetch_via_api", return_value=wu):
+        backfill.correr(desde=date(2020, 1, 1), hasta=date(2020, 1, 1))
+    obs = storage.read_observations()
+    # Wunderground (33.0) debe ganar sobre el pico derivado de Open-Meteo (30.0).
+    assert obs[obs["fecha"] == "2020-01-01"].iloc[0]["temp_max_c"] == 33.0
+
+
+def test_backfill_correr_sin_wunderground_usa_open_meteo(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    horas = [{"timestamp": "2020-01-01T14:00", "temp_c": 30.0, "humedad": 70.0, "nubosidad": 30.0}]
+    with patch("src.backfill.openmeteo.fetch_archivo", return_value=horas), \
+         patch("src.backfill.openmeteo.fetch_forecast_max_historico", return_value=[]), \
+         patch("src.backfill.wunderground.fetch_via_api", side_effect=RuntimeError("sin key")):
+        backfill.correr(desde=date(2020, 1, 1), hasta=date(2020, 1, 1))
+    obs = storage.read_observations()
+    # Sin API de Wunderground, queda el pico de Open-Meteo; no falla.
+    assert obs[obs["fecha"] == "2020-01-01"].iloc[0]["temp_max_c"] == 30.0
+
+
 def test_actualizar_reciente_prefiere_wunderground(tmp_path, monkeypatch):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
     horas = [{"timestamp": "2026-06-10T14:00", "temp_c": 33.0, "humedad": 70.0, "nubosidad": 30.0}]
