@@ -2,9 +2,9 @@
   "hoy": "2026-06-18",
   "pico_hoy": {
     "pico_pred": 29.9,
-    "p10": 29.3,
+    "p10": 29.0,
     "p90": 31.8,
-    "hora_decision": 8
+    "hora_decision": 9
   },
   "curva_hoy": [
     {
@@ -45,6 +45,12 @@
       "hora_decision": 8,
       "pico_pred": 29.9,
       "p10": 29.3,
+      "p90": 31.8
+    },
+    {
+      "hora_decision": 9,
+      "pico_pred": 29.9,
+      "p10": 29.0,
       "p90": 31.8
     }
   ],
