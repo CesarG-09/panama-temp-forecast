@@ -2,7 +2,8 @@ name: Predicción horaria
 
 on:
   schedule:
-    - cron: "0 11-21 * * *"   # 06:00–16:00 Panamá (UTC-5)
+    # Minuto :23 (no :00): GitHub descarta/retrasa los crons a la hora en punto.
+    - cron: "23 11-21 * * *"   # 06:23–16:23 Panamá (UTC-5)
   workflow_dispatch:
 
 permissions:
