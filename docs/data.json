@@ -1,156 +1,119 @@
 {
-  "hoy": "2026-06-17",
+  "hoy": "2026-06-18",
   "pico_hoy": {
-    "pico_pred": 27.1,
-    "p10": 27.0,
-    "p90": 27.4,
-    "hora_decision": 15
+    "pico_pred": 29.9,
+    "p10": 29.3,
+    "p90": 31.8,
+    "hora_decision": 8
   },
   "curva_hoy": [
     {
       "hora": 0,
-      "temp_c": 25.0
+      "temp_c": 24.0
     },
     {
       "hora": 1,
-      "temp_c": 25.0
-    },
-    {
-      "hora": 2,
-      "temp_c": 24.7
+      "temp_c": 24.0
     },
     {
       "hora": 3,
-      "temp_c": 24.6
+      "temp_c": 24.0
     },
     {
       "hora": 4,
-      "temp_c": 24.5
+      "temp_c": 24.0
     },
     {
       "hora": 5,
-      "temp_c": 24.5
+      "temp_c": 24.0
     },
     {
       "hora": 6,
-      "temp_c": 24.6
+      "temp_c": 24.0
     },
     {
       "hora": 7,
-      "temp_c": 24.8
+      "temp_c": 24.0
     },
     {
       "hora": 8,
-      "temp_c": 24.6
-    },
-    {
-      "hora": 9,
-      "temp_c": 24.6
-    },
-    {
-      "hora": 10,
-      "temp_c": 24.9
-    },
-    {
-      "hora": 11,
-      "temp_c": 25.1
-    },
-    {
-      "hora": 12,
-      "temp_c": 25.2
-    },
-    {
-      "hora": 13,
-      "temp_c": 25.8
-    },
-    {
-      "hora": 14,
-      "temp_c": 26.1
-    },
-    {
-      "hora": 15,
-      "temp_c": 26.5
+      "temp_c": 25.0
     }
   ],
   "convergencia_hoy": [
     {
       "hora_decision": 8,
-      "pico_pred": 28.6,
-      "p10": 27.4,
-      "p90": 30.1
+      "pico_pred": 29.9,
+      "p10": 29.3,
+      "p90": 31.8
+    }
+  ],
+  "error_por_hora": [
+    {
+      "hora_decision": 8,
+      "error_medio_abs": 1.6
     },
     {
       "hora_decision": 9,
-      "pico_pred": 26.5,
-      "p10": 26.4,
-      "p90": 27.4
+      "error_medio_abs": 0.5
     },
     {
       "hora_decision": 12,
-      "pico_pred": 27.1,
-      "p10": 27.0,
-      "p90": 27.4
+      "error_medio_abs": 0.1
     },
     {
       "hora_decision": 15,
-      "pico_pred": 27.1,
-      "p10": 27.0,
-      "p90": 27.4
+      "error_medio_abs": 0.1
     }
   ],
-  "error_por_hora": [],
   "observados_recientes": [
     {
-      "fecha": "2026-05-18",
-      "temp_max_c": 31.2
-    },
-    {
       "fecha": "2026-05-19",
-      "temp_max_c": 33.8
+      "temp_max_c": 34.0
     },
     {
       "fecha": "2026-05-20",
-      "temp_max_c": 33.7
+      "temp_max_c": 33.0
     },
     {
       "fecha": "2026-05-21",
-      "temp_max_c": 32.0
+      "temp_max_c": 33.0
     },
     {
       "fecha": "2026-05-22",
-      "temp_max_c": 31.1
+      "temp_max_c": 31.0
     },
     {
       "fecha": "2026-05-23",
-      "temp_max_c": 33.2
+      "temp_max_c": 33.0
     },
     {
       "fecha": "2026-05-24",
-      "temp_max_c": 32.5
+      "temp_max_c": 32.0
     },
     {
       "fecha": "2026-05-25",
-      "temp_max_c": 32.8
+      "temp_max_c": 33.0
     },
     {
       "fecha": "2026-05-26",
-      "temp_max_c": 30.4
+      "temp_max_c": 30.0
     },
     {
       "fecha": "2026-05-27",
-      "temp_max_c": 31.7
+      "temp_max_c": 33.0
     },
     {
       "fecha": "2026-05-28",
-      "temp_max_c": 29.5
+      "temp_max_c": 31.0
     },
     {
       "fecha": "2026-05-29",
-      "temp_max_c": 27.5
+      "temp_max_c": 30.0
     },
     {
       "fecha": "2026-05-30",
-      "temp_max_c": 30.3
+      "temp_max_c": 31.0
     },
     {
       "fecha": "2026-05-31",
@@ -158,35 +121,35 @@
     },
     {
       "fecha": "2026-06-01",
-      "temp_max_c": 32.8
+      "temp_max_c": 34.0
     },
     {
       "fecha": "2026-06-02",
-      "temp_max_c": 32.3
+      "temp_max_c": 33.0
     },
     {
       "fecha": "2026-06-03",
-      "temp_max_c": 29.6
-    },
-    {
-      "fecha": "2026-06-04",
       "temp_max_c": 30.0
     },
     {
+      "fecha": "2026-06-04",
+      "temp_max_c": 31.0
+    },
+    {
       "fecha": "2026-06-05",
-      "temp_max_c": 29.1
+      "temp_max_c": 31.0
     },
     {
       "fecha": "2026-06-06",
-      "temp_max_c": 26.6
+      "temp_max_c": 30.0
     },
     {
       "fecha": "2026-06-07",
-      "temp_max_c": 27.9
+      "temp_max_c": 28.0
     },
     {
       "fecha": "2026-06-08",
-      "temp_max_c": 27.9
+      "temp_max_c": 29.0
     },
     {
       "fecha": "2026-06-09",
@@ -219,6 +182,10 @@
     {
       "fecha": "2026-06-16",
       "temp_max_c": 31.0
+    },
+    {
+      "fecha": "2026-06-17",
+      "temp_max_c": 27.0
     }
   ]
 }
