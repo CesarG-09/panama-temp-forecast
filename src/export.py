@@ -1,12 +1,17 @@
 import json
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
+
+from src import config
 
 
 def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
                       evaluacion: pd.DataFrame, hoy: str,
-                      curva_hoy: list | None = None) -> dict:
+                      curva_hoy: list | None = None,
+                      generado: str | None = None) -> dict:
     hoy_preds = predicciones[predicciones["fecha_objetivo"] == hoy] \
         .sort_values("hora_decision")
 
@@ -33,8 +38,12 @@ def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
     observados = [{"fecha": r["fecha"], "temp_max_c": float(r["temp_max_c"])}
                   for _, r in observaciones.tail(30).iterrows()]
 
+    if generado is None:
+        generado = datetime.now(ZoneInfo(config.TZ)).isoformat(timespec="minutes")
+
     return {
         "hoy": hoy,
+        "generado": generado,
         "pico_hoy": pico_hoy,
         "curva_hoy": curva_hoy or [],
         "convergencia_hoy": convergencia,

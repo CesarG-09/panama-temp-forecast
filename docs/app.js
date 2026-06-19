@@ -3,6 +3,15 @@ async function cargar() {
   const datos = await fetch('./data.json?v=' + Date.now()).then(r => r.json());
   document.getElementById('hoy').textContent = datos.hoy;
 
+  // Sello de "última actualización" en hora de Panamá (sea cual sea la zona del visor).
+  if (datos.generado) {
+    const fmt = new Date(datos.generado).toLocaleString('es-PA', {
+      timeZone: 'America/Panama', day: '2-digit', month: 'short',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    });
+    document.getElementById('generado').textContent = fmt + ' (Panamá)';
+  }
+
   // Hero: el pico (máxima) estimado de hoy + banda. NO es la temperatura de
   // la hora actual: es el techo del día, que suele darse cerca del mediodía.
   const hero = document.getElementById('hero');
