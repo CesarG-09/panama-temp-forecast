@@ -24,6 +24,7 @@ def test_construir_payload_estructura():
     assert payload["pico_hoy"]["p90"] == 33.4
     assert len(payload["convergencia_hoy"]) == 2
     assert payload["curva_hoy"] == []  # sin curva por defecto
+    assert payload["temp_actual"] is None  # sin temperatura actual por defecto
     assert "error_por_hora" in payload
 
 
@@ -53,6 +54,16 @@ def test_construir_payload_incluye_curva():
                                        pd.DataFrame(columns=["hora_decision", "error_c"]),
                                        hoy="2026-06-16", curva_hoy=curva)
     assert payload["curva_hoy"] == curva
+
+
+def test_construir_payload_incluye_temp_actual():
+    actual = {"temp_c": 31.2, "hora_local": "13:40"}
+    payload = export.construir_payload(pd.DataFrame(columns=["fecha_objetivo", "hora_decision",
+                                                            "pico_pred", "p10", "p90"]),
+                                       pd.DataFrame(columns=["fecha", "temp_max_c"]),
+                                       pd.DataFrame(columns=["hora_decision", "error_c"]),
+                                       hoy="2026-06-16", temp_actual=actual)
+    assert payload["temp_actual"] == actual
 
 
 def test_exportar_escribe_json(tmp_path):

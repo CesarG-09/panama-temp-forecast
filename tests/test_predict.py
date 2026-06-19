@@ -66,6 +66,7 @@ def test_predict_curva_usa_wunderground_cuando_hay(tmp_path, monkeypatch):
     with patch("src.predict.openmeteo.fetch_intradia", return_value=intradia), \
          patch("src.predict.openmeteo.fetch_forecast_max", return_value=33.0), \
          patch("src.predict.wunderground.fetch_curva_intradia", return_value=wu_curva), \
+         patch("src.predict.wunderground.fetch_actual", return_value=None), \
          patch("src.predict._hora_local", return_value=10):
         predict.correr(hoy=hoy)
 
@@ -88,13 +89,37 @@ def test_predict_curva_cae_a_open_meteo_si_wunderground_falla(tmp_path, monkeypa
          patch("src.predict.openmeteo.fetch_forecast_max", return_value=33.0), \
          patch("src.predict.wunderground.fetch_curva_intradia",
                side_effect=RuntimeError("sin key")), \
+         patch("src.predict.wunderground.fetch_actual",
+               side_effect=RuntimeError("sin key")), \
          patch("src.predict._hora_local", return_value=10):
         predict.correr(hoy=hoy)
 
     datos = json.loads((tmp_path / "data.json").read_text())
-    # Sin Wunderground, la curva cae a Open-Meteo (hora 0 = 24.0).
+    # Sin Wunderground, la curva cae a Open-Meteo (hora 0 = 24.0) y no hay temp actual.
     assert datos["curva_hoy"][0] == {"hora": 0, "temp_c": 24.0}
     assert len(datos["curva_hoy"]) == 11
+    assert datos["temp_actual"] is None
+
+
+def test_predict_incluye_temp_actual_de_mpmg(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("PTF_MODEL_DIR", str(tmp_path))
+    monkeypatch.setattr(predict, "RUTA_DATA_JSON", tmp_path / "data.json")
+    _sembrar_y_entrenar()
+
+    hoy = date(2026, 6, 16)
+    intradia = [{"timestamp": f"2026-06-16T{h:02d}:00", "temp_c": 24 + h * 0.5,
+                 "humedad": 85.0, "nubosidad": 40.0} for h in range(11)]
+    actual = {"temp_c": 30.4, "hora_local": "10:20"}
+    with patch("src.predict.openmeteo.fetch_intradia", return_value=intradia), \
+         patch("src.predict.openmeteo.fetch_forecast_max", return_value=33.0), \
+         patch("src.predict.wunderground.fetch_curva_intradia", return_value=[]), \
+         patch("src.predict.wunderground.fetch_actual", return_value=actual), \
+         patch("src.predict._hora_local", return_value=10):
+        predict.correr(hoy=hoy)
+
+    datos = json.loads((tmp_path / "data.json").read_text())
+    assert datos["temp_actual"] == actual
 
 
 def test_predict_fuera_de_franja_no_registra(tmp_path, monkeypatch):
