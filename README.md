@@ -34,6 +34,9 @@ confianza** [p10, p90] que se estrecha conforme avanza el día.
   `models/peak_model.txt`.
 - **`hourly.yml`** (cada hora 11:00–21:00 UTC = 6am–4pm Panamá) — predice el pico
   de hoy, registra la predicción, evalúa los días cerrados y publica el dashboard.
+  El `cron` de GitHub es *best-effort*: en horas de carga descarta o retrasa los
+  disparos, así que la fuente **puntual** es un cron externo vía `workflow_dispatch`
+  (ver [Disparo puntual](#disparo-puntual-cron-externo)); el `cron` queda de respaldo.
 
 ## Puesta en marcha
 
@@ -45,6 +48,40 @@ confianza** [p10, p90] que se estrecha conforme avanza el día.
    (deja `2020-01-01`).
 4. **Entrenar:** Actions → *Entrenamiento nocturno* → *Run workflow* (o espera al cron).
 5. **Listo:** la *Predicción horaria* corre sola en la franja diurna.
+
+## Disparo puntual (cron externo)
+
+Los `schedule` de GitHub Actions **no son puntuales**: en horas de carga retrasan
+los disparos 10–30+ min o los descartan. Para que el dashboard se actualice a la
+hora exacta, un servicio cron externo invoca `hourly.yml` por la API (un
+`workflow_dispatch` **sí** se ejecuta de inmediato, no se descarta). El `cron` del
+workflow se deja como respaldo gratuito.
+
+**1. Crear un token de acceso (fine-grained PAT)** — github.com → *Settings* →
+*Developer settings* → *Personal access tokens* → *Fine-grained tokens* →
+*Generate new token*:
+- *Resource owner:* `CesarG-09`
+- *Repository access:* *Only select repositories* → `panama-temp-forecast`
+- *Permissions* → *Repository permissions* → **Actions: Read and write**
+  (*Metadata: Read* se añade solo).
+- *Expiration:* lo que prefieras (al caducar hay que regenerarlo).
+- Copia el token: solo se muestra una vez. **No lo subas al repo**; vive solo en
+  el servicio externo.
+
+**2. Crear el job en un cron externo** (p. ej. [cron-job.org](https://cron-job.org),
+gratis y puntual al minuto; sirve cualquiera que haga POST con cabeceras y cuerpo):
+- **Método:** `POST`
+- **URL:** `https://api.github.com/repos/CesarG-09/panama-temp-forecast/actions/workflows/hourly.yml/dispatches`
+- **Cabeceras:**
+  - `Accept: application/vnd.github+json`
+  - `Authorization: Bearer EL_TOKEN`
+  - `X-GitHub-Api-Version: 2022-11-28`
+- **Cuerpo (JSON):** `{"ref":"main"}`
+- **Horario:** cada hora **de 6:00 a 16:00, zona horaria `America/Panama`**
+  (cron-job.org permite elegir la zona; si solo acepta UTC, usa 11:00–21:00).
+
+Una respuesta `204 No Content` significa que el disparo se aceptó. Verifica en
+*Actions* que la corrida aparece con evento `workflow_dispatch`.
 
 ## Desarrollo local
 
