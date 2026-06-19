@@ -69,6 +69,32 @@ def parse_curva_intradia(payload: dict, fecha) -> list[dict]:
     return [{"hora": h, "temp_c": round(por_hora[h], 1)} for h in sorted(por_hora)]
 
 
+def parse_actual(payload: dict, fecha) -> dict | None:
+    """Temperatura actual = última observación (más reciente) de `fecha` en hora local.
+
+    Devuelve {"temp_c", "hora_local"} de la observación con `valid_time_gmt` mayor,
+    o None si no hay observaciones de esa fecha. Es la misma fuente (estación MPMG)
+    que muestra la página de condiciones actuales de wunderground.com.
+    """
+    tz = ZoneInfo(config.TZ)
+    fecha_iso = fecha.isoformat()
+    mejor_ts = None
+    resultado = None
+    for obs in payload.get("observations", []):
+        temp = obs.get("temp")
+        ts = obs.get("valid_time_gmt")
+        if temp is None or ts is None:
+            continue
+        dt = datetime.fromtimestamp(ts, tz=tz)
+        if dt.date().isoformat() != fecha_iso:
+            continue
+        if mejor_ts is None or ts > mejor_ts:
+            mejor_ts = ts
+            resultado = {"temp_c": round(float(temp), 1),
+                         "hora_local": dt.strftime("%H:%M")}
+    return resultado
+
+
 def fetch_curva_intradia(fecha) -> list[dict]:
     """Curva horaria observada de `fecha` desde la estación MPMG (API de Weather.com)."""
     api_key = os.environ.get("WUNDERGROUND_API_KEY")
@@ -84,6 +110,23 @@ def fetch_curva_intradia(fecha) -> list[dict]:
                         headers=_HEADERS, timeout=_TIMEOUT)
     resp.raise_for_status()
     return parse_curva_intradia(resp.json(), fecha)
+
+
+def fetch_actual(fecha) -> dict | None:
+    """Temperatura actual (última observación de hoy) desde la estación MPMG."""
+    api_key = os.environ.get("WUNDERGROUND_API_KEY")
+    if not api_key:
+        raise RuntimeError("Falta la variable de entorno WUNDERGROUND_API_KEY")
+    params = {
+        "apiKey": api_key,
+        "units": "m",
+        "startDate": fecha.strftime("%Y%m%d"),
+        "endDate": fecha.strftime("%Y%m%d"),
+    }
+    resp = requests.get(API_URL.format(station=config.ESTACION), params=params,
+                        headers=_HEADERS, timeout=_TIMEOUT)
+    resp.raise_for_status()
+    return parse_actual(resp.json(), fecha)
 
 
 def f_a_c(f: float) -> float:

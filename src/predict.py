@@ -42,6 +42,14 @@ def _curva_observada_mpmg(fecha: date, hora: int) -> list[dict] | None:
     return [c for c in curva if c["hora"] <= hora]
 
 
+def _temp_actual_mpmg(fecha: date) -> dict | None:
+    """Temperatura actual de la estación MPMG; None si la API no responde."""
+    try:
+        return wunderground.fetch_actual(fecha)
+    except Exception:
+        return None
+
+
 def correr(hoy: date | None = None) -> None:
     hoy = hoy or datetime.now(ZoneInfo(config.TZ)).date()
     hora = _hora_local(hoy)
@@ -78,15 +86,17 @@ def correr(hoy: date | None = None) -> None:
     evaluacion = evaluate.evaluar(predicciones, observaciones)
     storage.write_evaluation(evaluacion)
 
-    # La curva observada sale de la estación real MPMG (Wunderground) para que
-    # coincida con su tabla horaria; si la API falla, cae a Open-Meteo.
+    # La curva y la temperatura actual salen de la estación real MPMG
+    # (Wunderground) para que coincidan con su página; si la API falla, la
+    # curva cae a Open-Meteo y la temperatura actual simplemente no se muestra.
     curva = _curva_observada_mpmg(hoy, hora)
     if curva is None:
         curva = _curva_observada(intradia, hora)
+    temp_actual = _temp_actual_mpmg(hoy)
 
     payload = export.construir_payload(predicciones, observaciones, evaluacion,
                                        hoy=hoy.isoformat(),
-                                       curva_hoy=curva)
+                                       curva_hoy=curva, temp_actual=temp_actual)
     export.exportar(RUTA_DATA_JSON, payload)
 
 

@@ -11,7 +11,8 @@ from src import config
 def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
                       evaluacion: pd.DataFrame, hoy: str,
                       curva_hoy: list | None = None,
-                      generado: str | None = None) -> dict:
+                      generado: str | None = None,
+                      temp_actual: dict | None = None) -> dict:
     hoy_preds = predicciones[predicciones["fecha_objetivo"] == hoy] \
         .sort_values("hora_decision")
 
@@ -44,6 +45,7 @@ def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
     return {
         "hoy": hoy,
         "generado": generado,
+        "temp_actual": temp_actual,
         "pico_hoy": pico_hoy,
         "curva_hoy": curva_hoy or [],
         "convergencia_hoy": convergencia,

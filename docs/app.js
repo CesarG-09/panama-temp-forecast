@@ -12,6 +12,13 @@ async function cargar() {
     document.getElementById('generado').textContent = fmt + ' (Panamá)';
   }
 
+  // Temperatura actual de la estación MPMG (si está disponible).
+  const a = datos.temp_actual;
+  const actualHtml = a
+    ? `<div class="actual"><span class="actual-num">${a.temp_c.toFixed(1)}°C</span>
+         <span class="actual-lbl">ahora en MPMG · ${a.hora_local}</span></div>`
+    : '';
+
   // Hero: el pico (máxima) estimado de hoy + banda. NO es la temperatura de
   // la hora actual: es el techo del día, que suele darse cerca del mediodía.
   const hero = document.getElementById('hero');
@@ -21,9 +28,11 @@ async function cargar() {
       <div class="rotulo">Pico máximo previsto para HOY</div>
       <div class="pico">${p.pico_pred.toFixed(1)}°C</div>
       <div class="banda">banda ${p.p10.toFixed(1)}° – ${p.p90.toFixed(1)}°</div>
-      <div class="nota">La máxima del día suele ocurrir entre 12 y 2 pm · estimación calculada a las ${p.hora_decision}:00 hora Panamá y afinada cada hora</div>`;
+      ${actualHtml}
+      <div class="nota">La máxima del día suele ocurrir entre 12 y 2 pm · estimación calculada a las ${p.hora_decision}:00 hora Panamá y afinada cada hora</div>`;
   } else {
-    hero.innerHTML = '<div class="nota">Aún no hay predicción para hoy. Aparecerá dentro de la franja diurna (6am–4pm).</div>';
+    hero.innerHTML = actualHtml +
+      '<div class="nota">Aún no hay predicción del pico para hoy. Aparecerá dentro de la franja diurna (6am–4pm).</div>';
   }
 
   // Curva del día: la temperatura observada hoy subiendo, con la banda del
