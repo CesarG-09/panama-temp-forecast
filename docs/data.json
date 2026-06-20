@@ -1,181 +1,93 @@
 {
-  "hoy": "2026-06-19",
-  "generado": "2026-06-19T16:45-05:00",
+  "hoy": "2026-06-20",
+  "generado": "2026-06-20T06:00-05:00",
   "temp_actual": {
-    "temp_c": 29.0,
-    "hora_local": "15:00"
+    "temp_c": 26.0,
+    "hora_local": "05:00"
   },
   "pico_hoy": {
-    "pico_pred": 32.9,
-    "p10": 31.1,
-    "p90": 33.0,
-    "hora_decision": 16
+    "pico_pred": 30.8,
+    "p10": 29.5,
+    "p90": 32.5,
+    "hora_decision": 6
   },
   "curva_hoy": [
     {
-      "hora": 0,
-      "temp_c": 26.0
-    },
-    {
       "hora": 1,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 2,
-      "temp_c": 25.0
-    },
-    {
-      "hora": 3,
-      "temp_c": 25.0
-    },
-    {
-      "hora": 4,
-      "temp_c": 25.0
-    },
-    {
-      "hora": 5,
-      "temp_c": 25.0
-    },
-    {
-      "hora": 6,
-      "temp_c": 25.0
-    },
-    {
-      "hora": 7,
-      "temp_c": 25.0
-    },
-    {
-      "hora": 8,
       "temp_c": 27.0
     },
     {
-      "hora": 9,
-      "temp_c": 29.0
+      "hora": 2,
+      "temp_c": 26.0
     },
     {
-      "hora": 10,
-      "temp_c": 30.0
+      "hora": 3,
+      "temp_c": 26.0
     },
     {
-      "hora": 11,
-      "temp_c": 31.0
+      "hora": 4,
+      "temp_c": 26.0
     },
     {
-      "hora": 12,
-      "temp_c": 31.0
-    },
-    {
-      "hora": 13,
-      "temp_c": 32.0
-    },
-    {
-      "hora": 14,
-      "temp_c": 31.0
-    },
-    {
-      "hora": 15,
-      "temp_c": 29.0
-    },
-    {
-      "hora": 16,
-      "temp_c": 30.0
+      "hora": 5,
+      "temp_c": 26.0
     }
   ],
   "convergencia_hoy": [
     {
       "hora_decision": 6,
-      "pico_pred": 32.1,
-      "p10": 30.9,
-      "p90": 33.0
-    },
-    {
-      "hora_decision": 7,
-      "pico_pred": 32.1,
-      "p10": 30.9,
-      "p90": 33.0
-    },
-    {
-      "hora_decision": 8,
-      "pico_pred": 32.2,
-      "p10": 30.0,
-      "p90": 32.9
-    },
-    {
-      "hora_decision": 9,
-      "pico_pred": 31.9,
-      "p10": 30.0,
-      "p90": 32.9
-    },
-    {
-      "hora_decision": 10,
-      "pico_pred": 31.9,
-      "p10": 30.0,
-      "p90": 32.9
-    },
-    {
-      "hora_decision": 11,
-      "pico_pred": 31.9,
-      "p10": 30.0,
-      "p90": 32.9
-    },
-    {
-      "hora_decision": 12,
-      "pico_pred": 31.8,
-      "p10": 30.3,
-      "p90": 32.9
-    },
-    {
-      "hora_decision": 13,
-      "pico_pred": 31.9,
-      "p10": 30.2,
-      "p90": 32.9
-    },
-    {
-      "hora_decision": 14,
-      "pico_pred": 32.9,
-      "p10": 31.2,
-      "p90": 33.0
-    },
-    {
-      "hora_decision": 15,
-      "pico_pred": 32.9,
-      "p10": 31.1,
-      "p90": 33.0
-    },
-    {
-      "hora_decision": 16,
-      "pico_pred": 32.9,
-      "p10": 31.1,
-      "p90": 33.0
+      "pico_pred": 30.8,
+      "p10": 29.5,
+      "p90": 32.5
     }
   ],
   "error_por_hora": [
     {
-      "hora_decision": 8,
-      "error_medio_abs": 1.85
-    },
-    {
-      "hora_decision": 9,
-      "error_medio_abs": 1.3
-    },
-    {
-      "hora_decision": 12,
-      "error_medio_abs": 1.05
-    },
-    {
-      "hora_decision": 15,
+      "hora_decision": 6,
       "error_medio_abs": 0.1
     },
     {
+      "hora_decision": 7,
+      "error_medio_abs": 0.1
+    },
+    {
+      "hora_decision": 8,
+      "error_medio_abs": 1.3
+    },
+    {
+      "hora_decision": 9,
+      "error_medio_abs": 0.9
+    },
+    {
+      "hora_decision": 10,
+      "error_medio_abs": 0.1
+    },
+    {
+      "hora_decision": 11,
+      "error_medio_abs": 0.1
+    },
+    {
+      "hora_decision": 12,
+      "error_medio_abs": 0.77
+    },
+    {
+      "hora_decision": 13,
+      "error_medio_abs": 0.1
+    },
+    {
+      "hora_decision": 14,
+      "error_medio_abs": 0.9
+    },
+    {
+      "hora_decision": 15,
+      "error_medio_abs": 0.5
+    },
+    {
       "hora_decision": 16,
-      "error_medio_abs": 1.5
+      "error_medio_abs": 1.2
     }
   ],
   "observados_recientes": [
-    {
-      "fecha": "2026-05-20",
-      "temp_max_c": 33.0
-    },
     {
       "fecha": "2026-05-21",
       "temp_max_c": 33.0
@@ -290,6 +202,10 @@
     },
     {
       "fecha": "2026-06-18",
+      "temp_max_c": 32.0
+    },
+    {
+      "fecha": "2026-06-19",
       "temp_max_c": 32.0
     }
   ]
