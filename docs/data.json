@@ -1,9 +1,9 @@
 {
   "hoy": "2026-06-20",
-  "generado": "2026-06-20T13:00-05:00",
+  "generado": "2026-06-20T13:15-05:00",
   "temp_actual": {
     "temp_c": 32.0,
-    "hora_local": "12:00"
+    "hora_local": "12:30"
   },
   "pico_hoy": {
     "pico_pred": 30.7,
