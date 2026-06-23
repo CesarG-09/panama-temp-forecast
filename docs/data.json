@@ -1,15 +1,15 @@
 {
   "hoy": "2026-06-23",
-  "generado": "2026-06-23T07:45-05:00",
+  "generado": "2026-06-23T08:00-05:00",
   "temp_actual": {
     "temp_c": 25.0,
     "hora_local": "07:00"
   },
   "pico_hoy": {
     "pico_pred": 32.0,
-    "p10": 30.4,
+    "p10": 30.3,
     "p90": 33.0,
-    "hora_decision": 7
+    "hora_decision": 8
   },
   "curva_hoy": [
     {
@@ -56,6 +56,12 @@
       "hora_decision": 7,
       "pico_pred": 32.0,
       "p10": 30.4,
+      "p90": 33.0
+    },
+    {
+      "hora_decision": 8,
+      "pico_pred": 32.0,
+      "p10": 30.3,
       "p90": 33.0
     }
   ],
