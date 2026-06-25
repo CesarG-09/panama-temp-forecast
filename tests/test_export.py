@@ -72,3 +72,38 @@ def test_exportar_escribe_json(tmp_path):
     ruta = tmp_path / "data.json"
     export.exportar(ruta, payload)
     assert json.loads(ruta.read_text())["hoy"] == "2026-06-16"
+
+
+def test_pasadas_vs_real_manana_y_final():
+    predicciones = pd.DataFrame([
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-20", "hora_decision": 6,
+         "pico_pred": 30.8, "p10": 29.5, "p90": 32.5, "modelo_version": "v"},
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-20", "hora_decision": 16,
+         "pico_pred": 31.6, "p10": 29.8, "p90": 33.0, "modelo_version": "v"},
+    ])
+    observaciones = pd.DataFrame([{"fecha": "2026-06-20", "temp_max_c": 33.0}])
+    out = export.construir_pasadas_vs_real(predicciones, observaciones)
+    assert out == [{
+        "fecha": "2026-06-20", "real": 33.0,
+        "manana_p50": 30.8, "manana_p10": 29.5, "manana_p90": 32.5,
+        "final_p50": 31.6,
+    }]
+
+
+def test_pasadas_vs_real_excluye_dias_sin_pico_real():
+    predicciones = pd.DataFrame([
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-21", "hora_decision": 6,
+         "pico_pred": 30.0, "p10": 29.0, "p90": 31.0, "modelo_version": "v"},
+    ])
+    observaciones = pd.DataFrame(columns=["fecha", "temp_max_c"])
+    assert export.construir_pasadas_vs_real(predicciones, observaciones) == []
+
+
+def test_pasadas_vs_real_un_solo_punto_manana_igual_final():
+    predicciones = pd.DataFrame([
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-22", "hora_decision": 9,
+         "pico_pred": 31.4, "p10": 30.4, "p90": 32.6, "modelo_version": "v"},
+    ])
+    observaciones = pd.DataFrame([{"fecha": "2026-06-22", "temp_max_c": 30.0}])
+    out = export.construir_pasadas_vs_real(predicciones, observaciones)
+    assert out[0]["manana_p50"] == 31.4 and out[0]["final_p50"] == 31.4

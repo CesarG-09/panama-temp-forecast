@@ -8,6 +8,34 @@ import pandas as pd
 from src import config
 
 
+def construir_pasadas_vs_real(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
+                              n_dias: int = 30) -> list[dict]:
+    """Por día con pico real: predicción de la mañana (hora de decisión mínima),
+    su banda, y la predicción final (hora máxima), contra el pico real.
+
+    Devuelve los últimos `n_dias` días, ascendente por fecha.
+    """
+    if len(predicciones) == 0 or len(observaciones) == 0:
+        return []
+    real = dict(zip(observaciones["fecha"], observaciones["temp_max_c"]))
+    filas = []
+    for fecha, grupo in predicciones.groupby("fecha_objetivo"):
+        if fecha not in real:
+            continue
+        g = grupo.sort_values("hora_decision")
+        manana, final = g.iloc[0], g.iloc[-1]
+        filas.append({
+            "fecha": fecha,
+            "real": round(float(real[fecha]), 1),
+            "manana_p50": round(float(manana["pico_pred"]), 1),
+            "manana_p10": round(float(manana["p10"]), 1),
+            "manana_p90": round(float(manana["p90"]), 1),
+            "final_p50": round(float(final["pico_pred"]), 1),
+        })
+    filas.sort(key=lambda r: r["fecha"])
+    return filas[-n_dias:]
+
+
 def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
                       evaluacion: pd.DataFrame, hoy: str,
                       curva_hoy: list | None = None,
