@@ -26,6 +26,9 @@ def test_construir_payload_estructura():
     assert payload["curva_hoy"] == []  # sin curva por defecto
     assert payload["temp_actual"] is None  # sin temperatura actual por defecto
     assert "error_por_hora" in payload
+    assert "pasadas_vs_real" in payload
+    assert "evolucion_modelo" in payload
+    assert "observados_recientes" not in payload
 
 
 def test_construir_payload_incluye_sello_de_generado():
@@ -107,3 +110,25 @@ def test_pasadas_vs_real_un_solo_punto_manana_igual_final():
     observaciones = pd.DataFrame([{"fecha": "2026-06-22", "temp_max_c": 30.0}])
     out = export.construir_pasadas_vs_real(predicciones, observaciones)
     assert out[0]["manana_p50"] == 31.4 and out[0]["final_p50"] == 31.4
+
+
+def test_evolucion_error_y_rolling():
+    evaluacion = pd.DataFrame([
+        {"fecha_objetivo": "2026-06-01", "hora_decision": 6,  "pico_pred": 0, "pico_real": 0, "error_c": 2.0},
+        {"fecha_objetivo": "2026-06-01", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": -0.5},
+        {"fecha_objetivo": "2026-06-02", "hora_decision": 6,  "pico_pred": 0, "pico_real": 0, "error_c": -1.0},
+        {"fecha_objetivo": "2026-06-02", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": 0.2},
+    ])
+    out = export.construir_evolucion(evaluacion, ventana=7, umbral=1.5)
+    assert out[0] == {"fecha": "2026-06-01", "err_manana": 2.0, "err_final": 0.5,
+                      "mae7_manana": 2.0, "mae7_final": 0.5,
+                      "acierto7_manana": 0.0, "acierto7_final": 1.0}
+    assert out[1] == {"fecha": "2026-06-02", "err_manana": 1.0, "err_final": 0.2,
+                      "mae7_manana": 1.5, "mae7_final": 0.35,
+                      "acierto7_manana": 0.5, "acierto7_final": 1.0}
+
+
+def test_evolucion_vacia():
+    vacio = pd.DataFrame(columns=["fecha_objetivo", "hora_decision",
+                                  "pico_pred", "pico_real", "error_c"])
+    assert export.construir_evolucion(vacio) == []
