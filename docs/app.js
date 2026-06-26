@@ -1,25 +1,43 @@
 const HMIN = 6, HMAX = 18;
-let curvaChart = null;
+const REFRESCO_DATOS_MS = 30 * 60 * 1000;   // re-lee data.json cada 30 min (pico + desempeño)
+const charts = {};
+let datosBackend = {};    // último data.json
+let curvaEnVivo = null;   // última curva del fetch en vivo (si la hubo)
+let liveActivo = false;   // ¿el fetch en vivo ya entregó la temperatura actual?
+
+// Crea (o recrea) un chart en un canvas, destruyendo el anterior para evitar
+// el error "Canvas is already in use" al refrescar.
+function pintar(canvasId, config) {
+  if (charts[canvasId]) charts[canvasId].destroy();
+  charts[canvasId] = new Chart(document.getElementById(canvasId), config);
+}
 
 async function cargar() {
+  await refrescarDatos();                       // primer render desde data.json
+  if (window.Live) {
+    window.Live.iniciarEnVivo((d) => {
+      if (d.actual) { liveActivo = true; pintarAhora(d.actual, true); }
+      if (d.curva && d.curva.length) { curvaEnVivo = d.curva; dibujarCurva(); }
+    });
+  }
+  setInterval(refrescarDatos, REFRESCO_DATOS_MS);
+}
+
+// Re-lee data.json (pico, pasadas, evolución, precisión por hora) al cargar y
+// cada 30 min, para que la pestaña abierta no quede congelada. La temperatura
+// actual y la curva las gobierna la capa en vivo; aquí solo se usan de respaldo.
+async function refrescarDatos() {
+  // cache-busting para no leer un data.json viejo de la CDN de Pages
   const datos = await fetch('./data.json?v=' + Date.now()).then(r => r.json());
+  datosBackend = datos;
   document.getElementById('hoy').textContent = datos.hoy || '';
   pintarGenerado(datos.generado);
-
   pintarPico(datos.pico_hoy);
-  pintarAhora(datos.temp_actual, false);           // respaldo inicial; el fetch en vivo lo pisa
-
-  curvaChart = crearCurva(datos.curva_hoy || [], datos.pico_hoy);
+  if (!liveActivo) pintarAhora(datos.temp_actual, false);   // respaldo si el vivo aún no entrega
+  dibujarCurva();
   renderPasadas(datos.pasadas_vs_real || []);
   renderEvolucion(datos.evolucion_modelo || []);
   renderErrorPorHora(datos.error_por_hora || []);
-
-  if (window.Live) {
-    window.Live.iniciarEnVivo((d) => {
-      if (d.actual) pintarAhora(d.actual, true);
-      if (d.curva && d.curva.length) actualizarCurva(d.curva);
-    });
-  }
 }
 
 function pintarGenerado(generado) {
@@ -83,7 +101,11 @@ function datasetObs(curva) {
            backgroundColor: '#1a7f37', borderWidth: 2, tension: .3, spanGaps: false, pointRadius: 2 };
 }
 
-function crearCurva(curva, p) {
+// Dibuja la curva de hoy: en vivo si la hay, si no el respaldo de data.json,
+// con la banda del pico previsto (de data.json) superpuesta.
+function dibujarCurva() {
+  const curva = curvaEnVivo || datosBackend.curva_hoy || [];
+  const p = datosBackend.pico_hoy;
   const labels = [];
   for (let h = HMIN; h <= HMAX; h++) labels.push(h + ':00');
   const datasets = [datasetObs(curva)];
@@ -99,7 +121,7 @@ function crearCurva(curva, p) {
         borderColor: '#cf222e', borderDash: [6, 3], borderWidth: 1.5, pointRadius: 0 },
     );
   }
-  return new Chart(document.getElementById('curva'), {
+  pintar('curva', {
     type: 'line',
     data: { labels, datasets },
     options: { scales: { y: { title: { display: true, text: '°C' } },
@@ -107,18 +129,12 @@ function crearCurva(curva, p) {
   });
 }
 
-function actualizarCurva(curva) {
-  if (!curvaChart) return;
-  curvaChart.data.datasets[0] = datasetObs(curva);
-  curvaChart.update();
-}
-
 function renderPasadas(arr) {
   const nota = document.getElementById('pasadas-nota');
   if (!arr.length) { nota.hidden = false; return; }
   nota.hidden = true;
   const labels = arr.map(r => r.fecha.slice(5));
-  new Chart(document.getElementById('pasadas'), {
+  pintar('pasadas', {
     type: 'line',
     data: {
       labels,
@@ -146,7 +162,7 @@ function renderEvolucion(arr) {
   nota.hidden = true;
   const labels = arr.map(r => r.fecha.slice(5));
 
-  new Chart(document.getElementById('evo-error'), {
+  pintar('evo-error', {
     type: 'line',
     data: {
       labels,
@@ -164,7 +180,7 @@ function renderEvolucion(arr) {
     options: { scales: { y: { beginAtZero: true, title: { display: true, text: '°C de error' } } } },
   });
 
-  new Chart(document.getElementById('evo-acierto'), {
+  pintar('evo-acierto', {
     type: 'line',
     data: {
       labels,
@@ -180,7 +196,7 @@ function renderEvolucion(arr) {
 }
 
 function renderErrorPorHora(arr) {
-  new Chart(document.getElementById('error'), {
+  pintar('error', {
     type: 'bar',
     data: {
       labels: arr.map(r => r.hora_decision + ':00'),
