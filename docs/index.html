@@ -3,42 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pico de temperatura de hoy — Ciudad de Panamá</title>
+  <title>Temperatura de hoy — Ciudad de Panamá (MPMG)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
-    h1 { font-size: 1.5rem; }
-    h2 { font-size: 1.1rem; margin-top: 2rem; }
-    .hero { background: #fff5f5; border: 1px solid #ffd7d5; border-radius: 14px; padding: 1.5rem; text-align: center; margin: 1rem 0; }
-    .hero .rotulo { font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #cf222e; }
-    .hero .pico { font-size: 3rem; font-weight: 800; color: #cf222e; line-height: 1; margin-top: .2rem; }
-    .hero .banda { font-size: 1rem; color: #884; margin-top: .4rem; }
-    .hero .actual { margin-top: .8rem; padding-top: .7rem; border-top: 1px solid #ffd7d5; }
-    .hero .actual-num { font-size: 1.7rem; font-weight: 700; color: #0969da; }
-    .hero .actual-lbl { font-size: .8rem; color: #888; }
-    .hero .nota { font-size: .8rem; color: #888; margin-top: .5rem; }
+    h1 { font-size: 1.4rem; }
+    .zona-tit { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+                color: #57606a; border-bottom: 2px solid #eaeef2; padding-bottom: .3rem; margin: 2.2rem 0 .8rem; }
+    .zona-tit.envivo { color: #1a7f37; border-color: #d2f0d9; }
+    .zona-tit.desempeno { color: #0969da; border-color: #d7e8fb; }
+    h2 { font-size: 1.05rem; margin-top: 1.6rem; }
+    p.sub { font-size: .85rem; color: #666; margin-top: .2rem; }
+    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    .card { border: 1px solid #e1e4e8; border-radius: 14px; padding: 1.2rem; text-align: center; }
+    .card.ahora { background: #f0fbf3; border-color: #cfead7; }
+    .card.pico  { background: #fff5f5; border-color: #ffd7d5; }
+    .rotulo { font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .card.ahora .rotulo { color: #1a7f37; }
+    .card.pico  .rotulo { color: #cf222e; }
+    .num { font-size: 2.8rem; font-weight: 800; line-height: 1; margin-top: .25rem; }
+    .card.ahora .num { color: #1a7f37; }
+    .card.pico  .num { color: #cf222e; }
+    .meta { font-size: .82rem; color: #888; margin-top: .35rem; }
+    .sello { font-size: .72rem; color: #9aa0a6; margin-top: .3rem; }
+    .sello.retraso { color: #bf8700; }
+    @media (max-width: 520px) { .hero { grid-template-columns: 1fr; } }
     canvas { margin-top: .5rem; }
-    footer { margin-top: 2rem; font-size: .8rem; color: #888; }
+    .nota-vacia { font-size: .85rem; color: #999; font-style: italic; }
+    footer { margin-top: 2.5rem; font-size: .8rem; color: #888; }
   </style>
 </head>
 <body>
-  <h1>🌡️ Pico de temperatura de hoy — Ciudad de Panamá (MPMG)</h1>
-  <p>Predicción por Machine Learning de la <strong>máxima de hoy</strong> (el techo que alcanzará la temperatura, normalmente entre 12 y 2 pm), refinada cada hora con los datos observados durante el día. El número grande es ese pico previsto; la <strong>temperatura actual</strong> de la estación se muestra justo debajo.</p>
+  <h1>🌡️ Temperatura de hoy — Ciudad de Panamá (MPMG · Marcos A. Gelabert)</h1>
 
-  <div class="hero" id="hero"></div>
+  <div class="zona-tit envivo">En vivo</div>
+  <div class="hero">
+    <div class="card ahora">
+      <div class="rotulo">Ahora en la estación</div>
+      <div class="num" id="ahora-num">—</div>
+      <div class="meta" id="ahora-meta"></div>
+      <div class="sello" id="ahora-sello"></div>
+    </div>
+    <div class="card pico">
+      <div class="rotulo">Pico máximo previsto hoy</div>
+      <div class="num" id="pico-num">—</div>
+      <div class="meta" id="pico-banda"></div>
+      <div class="sello" id="pico-meta"></div>
+    </div>
+  </div>
 
   <h2>La temperatura de hoy y el pico previsto</h2>
-  <p style="font-size:.85rem;color:#666">La línea roja es la temperatura observada hoy hora a hora; la banda punteada es el pico máximo previsto, que suele alcanzarse entre 12 y 2 pm.</p>
+  <p class="sub">La línea es la temperatura observada hoy hora a hora en MPMG; la banda punteada es el pico máximo previsto, que suele alcanzarse entre 12 y 2 pm.</p>
   <canvas id="curva" height="130"></canvas>
 
-  <h2>Precisión por hora de decisión</h2>
-  <p style="font-size:.85rem;color:#666">Error absoluto medio del pico predicho según a qué hora se predijo (más tarde en el día → más certero).</p>
-  <canvas id="error" height="110"></canvas>
+  <div class="zona-tit desempeno">Desempeño del modelo</div>
 
-  <h2>Picos reales recientes</h2>
-  <canvas id="observados" height="110"></canvas>
+  <h2>Predicciones pasadas vs. real</h2>
+  <p class="sub">Para cada día: el pico real, la predicción de la mañana (~6am, con su banda) y la predicción final (~4pm). Cuanto más cerca del real, mejor.</p>
+  <canvas id="pasadas" height="120"></canvas>
+  <p class="nota-vacia" id="pasadas-nota" hidden>Se llenará conforme se acumulen días con pico real.</p>
 
-  <footer>Día: <span id="hoy"></span> · Última actualización: <span id="generado">—</span> · Modelo: LightGBM cuantiles · Datos: Open-Meteo + Wunderground (MPMG)</footer>
+  <h2>Evolución del modelo</h2>
+  <p class="sub">Error absoluto por día con su media móvil de 7 días (¿el error baja?).</p>
+  <canvas id="evo-error" height="110"></canvas>
+  <p class="sub">Tasa de acierto: % de días dentro de ±1.5 °C, media móvil de 7 días (¿sube?).</p>
+  <canvas id="evo-acierto" height="110"></canvas>
+  <p class="nota-vacia" id="evo-nota" hidden>Se llenará conforme se acumulen días evaluados.</p>
+
+  <h2>Precisión según la hora de decisión</h2>
+  <p class="sub">Error absoluto medio del pico previsto según a qué hora se predijo (más tarde en el día → más certero).</p>
+  <canvas id="error" height="100"></canvas>
+
+  <footer>Día: <span id="hoy"></span> · Última actualización del modelo: <span id="generado">—</span> · Modelo: LightGBM cuantiles · Datos: Open-Meteo + Wunderground (MPMG)</footer>
+
+  <script src="./live.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
