@@ -62,8 +62,8 @@ function pintarPico(p) {
     meta.textContent = 'aún sin predicción para hoy';
     return;
   }
-  num.textContent = p.pico_pred.toFixed(1) + '°C';
-  banda.textContent = `banda ${p.p10.toFixed(1)}° – ${p.p90.toFixed(1)}°`;
+  num.textContent = Math.trunc(p.pico_pred) + '°C';
+  banda.textContent = `banda ${Math.trunc(p.p10)}° – ${Math.trunc(p.p90)}°`;
   if (p.prob_acierto != null) {
     let t = `≈${p.prob_acierto}% probable que este sea el pico · histórico de ${p.prob_n} día${p.prob_n === 1 ? '' : 's'}`;
     if (p.prob_n < 5) t += ' (pocos datos aún)';
@@ -85,7 +85,7 @@ function pintarAhora(actual, enVivo) {
     sello.classList.remove('retraso');
     return;
   }
-  num.textContent = actual.temp_c.toFixed(1) + '°C';
+  num.textContent = Math.trunc(actual.temp_c) + '°C';
   meta.textContent = 'MPMG · ' + actual.hora_local;
   if (enVivo && actual.ts) {
     const min = Math.max(0, Math.round(Date.now() / 1000 / 60 - actual.ts / 60));
@@ -224,14 +224,14 @@ function renderTablaHistorica(arr) {
   if (!arr.length) { body.innerHTML = ''; tabla.hidden = true; nota.hidden = false; return; }
   tabla.hidden = false; nota.hidden = true;
   body.innerHTML = arr.map(r => {
-    const dif = (r.diferencia >= 0 ? '+' : '') + r.diferencia.toFixed(1);
+    const dif = (r.diferencia >= 0 ? '+' : '') + r.diferencia;
     const cumplio = r.se_cumplio
       ? '<span class="si">✓ Sí</span>'
       : '<span class="no">✗ No</span>';
     return `<tr>
       <td>${r.fecha.slice(5)}</td>
-      <td>${r.prediccion.toFixed(1)}°C</td>
-      <td>${r.real.toFixed(1)}°C</td>
+      <td>${r.prediccion}°C</td>
+      <td>${r.real}°C</td>
       <td>${cumplio}</td>
       <td>${r.tasa_error_pct.toFixed(1)}%</td>
       <td>${dif}°C</td>
