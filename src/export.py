@@ -71,6 +71,49 @@ def construir_evolucion(evaluacion: pd.DataFrame, ventana: int = 7,
             for _, r in df.iterrows()]
 
 
+def _acierto_hora(evaluacion: pd.DataFrame, hora: int,
+                  umbral: float = config.UMBRAL_ACIERTO_C) -> tuple:
+    """(% de acierto entero, n) de las predicciones hechas a `hora`.
+
+    Acierto = |error_c| <= umbral. Devuelve (None, None) si esa hora no tiene
+    historial evaluado.
+    """
+    if len(evaluacion) == 0:
+        return (None, None)
+    sub = evaluacion[evaluacion["hora_decision"] == hora]
+    if len(sub) == 0:
+        return (None, None)
+    pct = (sub["error_c"].abs() <= umbral).mean()
+    return (round(float(pct) * 100), int(len(sub)))
+
+
+def construir_tabla_historica(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
+                              n_dias: int = 20) -> list[dict]:
+    """Registro por día (predicción final vs pico real) de los últimos `n_dias`
+    días con pico real, más reciente primero.
+    """
+    if len(predicciones) == 0 or len(observaciones) == 0:
+        return []
+    real = dict(zip(observaciones["fecha"], observaciones["temp_max_c"]))
+    filas = []
+    for fecha, grupo in predicciones.groupby("fecha_objetivo"):
+        if fecha not in real:
+            continue
+        final = grupo.sort_values("hora_decision").iloc[-1]
+        pred = round(float(final["pico_pred"]), 1)
+        r = round(float(real[fecha]), 1)
+        filas.append({
+            "fecha": fecha,
+            "prediccion": pred,
+            "real": r,
+            "se_cumplio": abs(pred - r) <= config.UMBRAL_ACIERTO_C,
+            "tasa_error_pct": round(abs(pred - r) / r * 100, 1),
+            "diferencia": round(pred - r, 1),
+        })
+    filas.sort(key=lambda x: x["fecha"], reverse=True)
+    return filas[:n_dias]
+
+
 def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
                       evaluacion: pd.DataFrame, hoy: str,
                       curva_hoy: list | None = None,
@@ -86,6 +129,9 @@ def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
         pico_hoy = {"pico_pred": float(ult["pico_pred"]),
                     "p10": float(ult["p10"]), "p90": float(ult["p90"]),
                     "hora_decision": int(ult["hora_decision"])}
+        prob_acierto, prob_n = _acierto_hora(evaluacion, int(ult["hora_decision"]))
+        pico_hoy["prob_acierto"] = prob_acierto
+        pico_hoy["prob_n"] = prob_n
         convergencia = [{"hora_decision": int(r["hora_decision"]),
                          "pico_pred": float(r["pico_pred"]),
                          "p10": float(r["p10"]), "p90": float(r["p90"])}
@@ -112,6 +158,7 @@ def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
         "error_por_hora": error_por_hora,
         "pasadas_vs_real": construir_pasadas_vs_real(predicciones, observaciones),
         "evolucion_modelo": construir_evolucion(evaluacion),
+        "tabla_historica": construir_tabla_historica(predicciones, observaciones),
     }
 
 

@@ -37,6 +37,7 @@ async function refrescarDatos() {
   dibujarCurva();
   renderPasadas(datos.pasadas_vs_real || []);
   renderEvolucion(datos.evolucion_modelo || []);
+  renderTablaHistorica(datos.tabla_historica || []);
   renderErrorPorHora(datos.error_por_hora || []);
 }
 
@@ -52,15 +53,24 @@ function pintarGenerado(generado) {
 function pintarPico(p) {
   const num = document.getElementById('pico-num');
   const banda = document.getElementById('pico-banda');
+  const prob = document.getElementById('pico-prob');
   const meta = document.getElementById('pico-meta');
   if (!p) {
     num.textContent = '—';
     banda.textContent = '';
+    prob.textContent = '';
     meta.textContent = 'aún sin predicción para hoy';
     return;
   }
   num.textContent = p.pico_pred.toFixed(1) + '°C';
   banda.textContent = `banda ${p.p10.toFixed(1)}° – ${p.p90.toFixed(1)}°`;
+  if (p.prob_acierto != null) {
+    let t = `≈${p.prob_acierto}% probable que este sea el pico · histórico de ${p.prob_n} día${p.prob_n === 1 ? '' : 's'}`;
+    if (p.prob_n < 5) t += ' (pocos datos aún)';
+    prob.textContent = t;
+  } else {
+    prob.textContent = '';
+  }
   meta.textContent = `estimado a las ${p.hora_decision}:00 · se afina cada hora`;
 }
 
@@ -205,6 +215,28 @@ function renderErrorPorHora(arr) {
     },
     options: { scales: { y: { beginAtZero: true, title: { display: true, text: '°C' } } } },
   });
+}
+
+function renderTablaHistorica(arr) {
+  const body = document.getElementById('tabla-historica-body');
+  const nota = document.getElementById('tabla-nota');
+  const tabla = document.getElementById('tabla-historica');
+  if (!arr.length) { body.innerHTML = ''; tabla.hidden = true; nota.hidden = false; return; }
+  tabla.hidden = false; nota.hidden = true;
+  body.innerHTML = arr.map(r => {
+    const dif = (r.diferencia >= 0 ? '+' : '') + r.diferencia.toFixed(1);
+    const cumplio = r.se_cumplio
+      ? '<span class="si">✓ Sí</span>'
+      : '<span class="no">✗ No</span>';
+    return `<tr>
+      <td>${r.fecha.slice(5)}</td>
+      <td>${r.prediccion.toFixed(1)}°C</td>
+      <td>${r.real.toFixed(1)}°C</td>
+      <td>${cumplio}</td>
+      <td>${r.tasa_error_pct.toFixed(1)}%</td>
+      <td>${dif}°C</td>
+    </tr>`;
+  }).join('');
 }
 
 cargar();
