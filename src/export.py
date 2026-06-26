@@ -71,19 +71,18 @@ def construir_evolucion(evaluacion: pd.DataFrame, ventana: int = 7,
             for _, r in df.iterrows()]
 
 
-def _acierto_hora(evaluacion: pd.DataFrame, hora: int,
-                  umbral: float = config.UMBRAL_ACIERTO_C) -> tuple:
+def _acierto_hora(evaluacion: pd.DataFrame, hora: int) -> tuple:
     """(% de acierto entero, n) de las predicciones hechas a `hora`.
 
-    Acierto = |error_c| <= umbral. Devuelve (None, None) si esa hora no tiene
-    historial evaluado.
+    Acierto = el pico predicho, TRUNCADO a grados enteros, coincide exacto con el
+    pico real (truncado). Devuelve (None, None) si esa hora no tiene historial.
     """
     if len(evaluacion) == 0:
         return (None, None)
     sub = evaluacion[evaluacion["hora_decision"] == hora]
     if len(sub) == 0:
         return (None, None)
-    pct = (sub["error_c"].abs() <= umbral).mean()
+    pct = (sub["pico_pred"].astype(int) == sub["pico_real"].astype(int)).mean()
     return (round(float(pct) * 100), int(len(sub)))
 
 
@@ -100,15 +99,15 @@ def construir_tabla_historica(predicciones: pd.DataFrame, observaciones: pd.Data
         if fecha not in real:
             continue
         final = grupo.sort_values("hora_decision").iloc[-1]
-        pred = round(float(final["pico_pred"]), 1)
-        r = round(float(real[fecha]), 1)
+        pred = int(float(final["pico_pred"]))   # truncado a grados enteros (no se redondea)
+        r = int(float(real[fecha]))
         filas.append({
             "fecha": fecha,
             "prediccion": pred,
             "real": r,
-            "se_cumplio": abs(pred - r) <= config.UMBRAL_ACIERTO_C,
+            "se_cumplio": pred == r,
             "tasa_error_pct": round(abs(pred - r) / r * 100, 1),
-            "diferencia": round(pred - r, 1),
+            "diferencia": pred - r,
         })
     filas.sort(key=lambda x: x["fecha"], reverse=True)
     return filas[:n_dias]

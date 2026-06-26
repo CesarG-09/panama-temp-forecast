@@ -139,11 +139,11 @@ def test_pico_hoy_incluye_prob_acierto():
         {"run_timestamp": "x", "fecha_objetivo": "2026-06-16", "hora_decision": 16,
          "pico_pred": 33.0, "p10": 32.0, "p90": 34.0, "modelo_version": "v"},
     ])
-    # A la hora 16: 3 días, 2 dentro de ±1.5 -> 67%
+    # A la hora 16: 3 días; acierto = trunc(pred) == real. 2 de 3 -> 67%
     evaluacion = pd.DataFrame([
-        {"fecha_objetivo": "2026-06-13", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": 0.5},
-        {"fecha_objetivo": "2026-06-14", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": -1.0},
-        {"fecha_objetivo": "2026-06-15", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": 2.0},
+        {"fecha_objetivo": "2026-06-13", "hora_decision": 16, "pico_pred": 32.4, "pico_real": 32.0, "error_c": 0.4},
+        {"fecha_objetivo": "2026-06-14", "hora_decision": 16, "pico_pred": 31.0, "pico_real": 32.0, "error_c": -1.0},
+        {"fecha_objetivo": "2026-06-15", "hora_decision": 16, "pico_pred": 33.9, "pico_real": 33.0, "error_c": 0.9},
     ])
     obs = pd.DataFrame(columns=["fecha", "temp_max_c"])
     payload = export.construir_payload(predicciones, obs, evaluacion, hoy="2026-06-16")
@@ -166,10 +166,11 @@ def test_pico_hoy_prob_acierto_null_sin_historial():
 
 
 def test_tabla_historica_columnas_y_orden():
+    # La predicción final se trunca (31.6 -> 31, 33.2 -> 33); acierto = exacto.
     predicciones = pd.DataFrame([
         {"run_timestamp": "x", "fecha_objetivo": "2026-06-20", "hora_decision": 6,  "pico_pred": 30.0, "p10": 29, "p90": 31, "modelo_version": "v"},
-        {"run_timestamp": "x", "fecha_objetivo": "2026-06-20", "hora_decision": 16, "pico_pred": 31.0, "p10": 30, "p90": 33, "modelo_version": "v"},
-        {"run_timestamp": "x", "fecha_objetivo": "2026-06-21", "hora_decision": 16, "pico_pred": 33.0, "p10": 32, "p90": 34, "modelo_version": "v"},
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-20", "hora_decision": 16, "pico_pred": 31.6, "p10": 30, "p90": 33, "modelo_version": "v"},
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-21", "hora_decision": 16, "pico_pred": 33.2, "p10": 32, "p90": 34, "modelo_version": "v"},
     ])
     observaciones = pd.DataFrame([
         {"fecha": "2026-06-20", "temp_max_c": 33.0},
@@ -177,11 +178,22 @@ def test_tabla_historica_columnas_y_orden():
     ])
     out = export.construir_tabla_historica(predicciones, observaciones)
     assert [r["fecha"] for r in out] == ["2026-06-21", "2026-06-20"]   # más reciente primero
-    assert out[1] == {"fecha": "2026-06-20", "prediccion": 31.0, "real": 33.0,
-                      "se_cumplio": False, "tasa_error_pct": 6.1, "diferencia": -2.0}
-    assert out[0]["se_cumplio"] is True
-    assert out[0]["diferencia"] == 0.0
-    assert out[0]["tasa_error_pct"] == 0.0
+    assert out[1] == {"fecha": "2026-06-20", "prediccion": 31, "real": 33,
+                      "se_cumplio": False, "tasa_error_pct": 6.1, "diferencia": -2}
+    assert out[0] == {"fecha": "2026-06-21", "prediccion": 33, "real": 33,
+                      "se_cumplio": True, "tasa_error_pct": 0.0, "diferencia": 0}
+
+
+def test_tabla_historica_trunca_no_redondea():
+    # 32.9 se TRUNCA a 32 (no se redondea a 33), así que no coincide con el real 33.
+    predicciones = pd.DataFrame([
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-19", "hora_decision": 16,
+         "pico_pred": 32.9, "p10": 32, "p90": 33, "modelo_version": "v"},
+    ])
+    observaciones = pd.DataFrame([{"fecha": "2026-06-19", "temp_max_c": 33.0}])
+    out = export.construir_tabla_historica(predicciones, observaciones)
+    assert out[0] == {"fecha": "2026-06-19", "prediccion": 32, "real": 33,
+                      "se_cumplio": False, "tasa_error_pct": 3.0, "diferencia": -1}
 
 
 def test_tabla_historica_tope_20():
