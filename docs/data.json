@@ -1,15 +1,17 @@
 {
   "hoy": "2026-06-26",
-  "generado": "2026-06-26T14:30-05:00",
+  "generado": "2026-06-26T14:45-05:00",
   "temp_actual": {
     "temp_c": 29.0,
-    "hora_local": "13:00"
+    "hora_local": "14:00"
   },
   "pico_hoy": {
     "pico_pred": 31.1,
-    "p10": 29.5,
+    "p10": 29.3,
     "p90": 31.7,
-    "hora_decision": 14
+    "hora_decision": 14,
+    "prob_acierto": 100,
+    "prob_n": 7
   },
   "curva_hoy": [
     {
@@ -62,6 +64,10 @@
     },
     {
       "hora": 13,
+      "temp_c": 29.0
+    },
+    {
+      "hora": 14,
       "temp_c": 29.0
     }
   ],
@@ -117,7 +123,7 @@
     {
       "hora_decision": 14,
       "pico_pred": 31.1,
-      "p10": 29.5,
+      "p10": 29.3,
       "p90": 31.7
     }
   ],
@@ -322,6 +328,80 @@
       "mae7_final": 0.7,
       "acierto7_manana": 0.571,
       "acierto7_final": 1.0
+    }
+  ],
+  "tabla_historica": [
+    {
+      "fecha": "2026-06-25",
+      "prediccion": 32.9,
+      "real": 32.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 2.8,
+      "diferencia": 0.9
+    },
+    {
+      "fecha": "2026-06-24",
+      "prediccion": 33.1,
+      "real": 33.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 0.3,
+      "diferencia": 0.1
+    },
+    {
+      "fecha": "2026-06-23",
+      "prediccion": 30.6,
+      "real": 30.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 2.0,
+      "diferencia": 0.6
+    },
+    {
+      "fecha": "2026-06-22",
+      "prediccion": 30.4,
+      "real": 30.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 1.3,
+      "diferencia": 0.4
+    },
+    {
+      "fecha": "2026-06-21",
+      "prediccion": 31.4,
+      "real": 32.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 1.9,
+      "diferencia": -0.6
+    },
+    {
+      "fecha": "2026-06-20",
+      "prediccion": 31.6,
+      "real": 33.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 4.2,
+      "diferencia": -1.4
+    },
+    {
+      "fecha": "2026-06-19",
+      "prediccion": 32.9,
+      "real": 32.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 2.8,
+      "diferencia": 0.9
+    },
+    {
+      "fecha": "2026-06-18",
+      "prediccion": 30.5,
+      "real": 32.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 4.7,
+      "diferencia": -1.5
+    },
+    {
+      "fecha": "2026-06-17",
+      "prediccion": 27.1,
+      "real": 27.0,
+      "se_cumplio": true,
+      "tasa_error_pct": 0.4,
+      "diferencia": 0.1
     }
   ]
 }
