@@ -132,3 +132,71 @@ def test_evolucion_vacia():
     vacio = pd.DataFrame(columns=["fecha_objetivo", "hora_decision",
                                   "pico_pred", "pico_real", "error_c"])
     assert export.construir_evolucion(vacio) == []
+
+
+def test_pico_hoy_incluye_prob_acierto():
+    predicciones = pd.DataFrame([
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-16", "hora_decision": 16,
+         "pico_pred": 33.0, "p10": 32.0, "p90": 34.0, "modelo_version": "v"},
+    ])
+    # A la hora 16: 3 días, 2 dentro de ±1.5 -> 67%
+    evaluacion = pd.DataFrame([
+        {"fecha_objetivo": "2026-06-13", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": 0.5},
+        {"fecha_objetivo": "2026-06-14", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": -1.0},
+        {"fecha_objetivo": "2026-06-15", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": 2.0},
+    ])
+    obs = pd.DataFrame(columns=["fecha", "temp_max_c"])
+    payload = export.construir_payload(predicciones, obs, evaluacion, hoy="2026-06-16")
+    assert payload["pico_hoy"]["prob_acierto"] == 67
+    assert payload["pico_hoy"]["prob_n"] == 3
+
+
+def test_pico_hoy_prob_acierto_null_sin_historial():
+    predicciones = pd.DataFrame([
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-16", "hora_decision": 7,
+         "pico_pred": 33.0, "p10": 32.0, "p90": 34.0, "modelo_version": "v"},
+    ])
+    evaluacion = pd.DataFrame([
+        {"fecha_objetivo": "2026-06-13", "hora_decision": 16, "pico_pred": 0, "pico_real": 0, "error_c": 0.5},
+    ])
+    obs = pd.DataFrame(columns=["fecha", "temp_max_c"])
+    payload = export.construir_payload(predicciones, obs, evaluacion, hoy="2026-06-16")
+    assert payload["pico_hoy"]["prob_acierto"] is None
+    assert payload["pico_hoy"]["prob_n"] is None
+
+
+def test_tabla_historica_columnas_y_orden():
+    predicciones = pd.DataFrame([
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-20", "hora_decision": 6,  "pico_pred": 30.0, "p10": 29, "p90": 31, "modelo_version": "v"},
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-20", "hora_decision": 16, "pico_pred": 31.0, "p10": 30, "p90": 33, "modelo_version": "v"},
+        {"run_timestamp": "x", "fecha_objetivo": "2026-06-21", "hora_decision": 16, "pico_pred": 33.0, "p10": 32, "p90": 34, "modelo_version": "v"},
+    ])
+    observaciones = pd.DataFrame([
+        {"fecha": "2026-06-20", "temp_max_c": 33.0},
+        {"fecha": "2026-06-21", "temp_max_c": 33.0},
+    ])
+    out = export.construir_tabla_historica(predicciones, observaciones)
+    assert [r["fecha"] for r in out] == ["2026-06-21", "2026-06-20"]   # más reciente primero
+    assert out[1] == {"fecha": "2026-06-20", "prediccion": 31.0, "real": 33.0,
+                      "se_cumplio": False, "tasa_error_pct": 6.1, "diferencia": -2.0}
+    assert out[0]["se_cumplio"] is True
+    assert out[0]["diferencia"] == 0.0
+    assert out[0]["tasa_error_pct"] == 0.0
+
+
+def test_tabla_historica_tope_20():
+    preds, obs = [], []
+    for i in range(1, 26):
+        f = f"2026-05-{i:02d}"
+        preds.append({"run_timestamp": "x", "fecha_objetivo": f, "hora_decision": 16,
+                      "pico_pred": 30.0, "p10": 29, "p90": 31, "modelo_version": "v"})
+        obs.append({"fecha": f, "temp_max_c": 30.0})
+    out = export.construir_tabla_historica(pd.DataFrame(preds), pd.DataFrame(obs))
+    assert len(out) == 20
+    assert out[0]["fecha"] == "2026-05-25"
+
+
+def test_tabla_historica_vacia():
+    vacio_pred = pd.DataFrame(columns=["fecha_objetivo", "hora_decision", "pico_pred", "p10", "p90"])
+    vacio_obs = pd.DataFrame(columns=["fecha", "temp_max_c"])
+    assert export.construir_tabla_historica(vacio_pred, vacio_obs) == []
