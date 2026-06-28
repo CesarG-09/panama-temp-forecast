@@ -1,9 +1,9 @@
 {
   "hoy": "2026-06-28",
-  "generado": "2026-06-28T15:30-05:00",
+  "generado": "2026-06-28T15:39-05:00",
   "temp_actual": {
-    "temp_c": 33.0,
-    "hora_local": "14:00"
+    "temp_c": 32.0,
+    "hora_local": "15:03"
   },
   "pico_hoy": {
     "pico_pred": 32.5,
@@ -69,6 +69,10 @@
     {
       "hora": 14,
       "temp_c": 33.0
+    },
+    {
+      "hora": 15,
+      "temp_c": 32.0
     }
   ],
   "convergencia_hoy": [
