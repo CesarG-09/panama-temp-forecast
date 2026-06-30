@@ -223,15 +223,22 @@ function renderTablaHistorica(arr) {
   const tabla = document.getElementById('tabla-historica');
   if (!arr.length) { body.innerHTML = ''; tabla.hidden = true; nota.hidden = false; return; }
   tabla.hidden = false; nota.hidden = true;
+  const hhmm = (h) => (h == null ? '—' : String(h).padStart(2, '0') + ':00');
   body.innerHTML = arr.map(r => {
     const dif = (r.diferencia >= 0 ? '+' : '') + r.diferencia;
     const cumplio = r.se_cumplio
       ? '<span class="si">✓ Sí</span>'
       : '<span class="no">✗ No</span>';
+    const antes = r.antes === true ? '<span class="si">✓</span>'
+                : r.antes === false ? '<span class="no">✗</span>'
+                : '—';
     return `<tr>
       <td>${r.fecha.slice(5)}</td>
       <td>${r.prediccion}°C</td>
+      <td>${hhmm(r.hora_prediccion)}</td>
       <td>${r.real}°C</td>
+      <td>${hhmm(r.hora_pico)}</td>
+      <td>${antes}</td>
       <td>${cumplio}</td>
       <td>${r.tasa_error_pct.toFixed(1)}%</td>
       <td>${dif}°C</td>

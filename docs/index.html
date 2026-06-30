@@ -37,6 +37,8 @@
     #tabla-historica th:first-child, #tabla-historica td:first-child { text-align: left; }
     #tabla-historica .si { color: #1a7f37; font-weight: 600; }
     #tabla-historica .no { color: #cf222e; font-weight: 600; }
+    .tabla-scroll { overflow-x: auto; }
+    #tabla-historica { min-width: 640px; }
     footer { margin-top: 2.5rem; font-size: .8rem; color: #888; }
   </style>
 </head>
@@ -73,12 +75,14 @@
 
   <h2>Registro de las últimas 20 predicciones</h2>
   <p class="sub">La predicción final de cada día (~4pm) contra el pico real observado.</p>
+  <div class="tabla-scroll">
   <table id="tabla-historica">
     <thead>
-      <tr><th>Día</th><th>Predicción</th><th>Pico Real</th><th>Se cumplió</th><th>Tasa de error</th><th>Diferencia</th></tr>
+      <tr><th>Día</th><th>Predicción</th><th>Hora pred.</th><th>Pico Real</th><th>Hora pico</th><th>¿Antes?</th><th>Se cumplió</th><th>Tasa de error</th><th>Diferencia</th></tr>
     </thead>
     <tbody id="tabla-historica-body"></tbody>
   </table>
+  </div>
   <p class="nota-vacia" id="tabla-nota" hidden>Se llenará conforme se acumulen días.</p>
 
   <h2>Evolución del modelo</h2>
