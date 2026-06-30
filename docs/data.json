@@ -1,6 +1,6 @@
 {
   "hoy": "2026-06-30",
-  "generado": "2026-06-30T09:30-05:00",
+  "generado": "2026-06-30T09:48-05:00",
   "temp_actual": {
     "temp_c": 30.0,
     "hora_local": "09:00"
@@ -357,6 +357,9 @@
       "fecha": "2026-06-29",
       "prediccion": 34,
       "real": 34,
+      "hora_prediccion": 16,
+      "hora_pico": 13,
+      "antes": false,
       "se_cumplio": true,
       "tasa_error_pct": 0.0,
       "diferencia": 0
@@ -365,6 +368,9 @@
       "fecha": "2026-06-28",
       "prediccion": 32,
       "real": 33,
+      "hora_prediccion": 6,
+      "hora_pico": 11,
+      "antes": true,
       "se_cumplio": false,
       "tasa_error_pct": 3.0,
       "diferencia": -1
@@ -373,6 +379,9 @@
       "fecha": "2026-06-27",
       "prediccion": 34,
       "real": 35,
+      "hora_prediccion": 6,
+      "hora_pico": 15,
+      "antes": true,
       "se_cumplio": false,
       "tasa_error_pct": 2.9,
       "diferencia": -1
@@ -381,6 +390,9 @@
       "fecha": "2026-06-26",
       "prediccion": 31,
       "real": 30,
+      "hora_prediccion": 6,
+      "hora_pico": 10,
+      "antes": true,
       "se_cumplio": false,
       "tasa_error_pct": 3.3,
       "diferencia": 1
@@ -389,6 +401,9 @@
       "fecha": "2026-06-25",
       "prediccion": 32,
       "real": 32,
+      "hora_prediccion": 6,
+      "hora_pico": 11,
+      "antes": true,
       "se_cumplio": true,
       "tasa_error_pct": 0.0,
       "diferencia": 0
@@ -397,6 +412,9 @@
       "fecha": "2026-06-24",
       "prediccion": 33,
       "real": 33,
+      "hora_prediccion": 15,
+      "hora_pico": 12,
+      "antes": false,
       "se_cumplio": true,
       "tasa_error_pct": 0.0,
       "diferencia": 0
@@ -405,6 +423,9 @@
       "fecha": "2026-06-23",
       "prediccion": 30,
       "real": 30,
+      "hora_prediccion": 11,
+      "hora_pico": 13,
+      "antes": true,
       "se_cumplio": true,
       "tasa_error_pct": 0.0,
       "diferencia": 0
@@ -413,6 +434,9 @@
       "fecha": "2026-06-22",
       "prediccion": 30,
       "real": 30,
+      "hora_prediccion": 14,
+      "hora_pico": 11,
+      "antes": false,
       "se_cumplio": true,
       "tasa_error_pct": 0.0,
       "diferencia": 0
@@ -421,6 +445,9 @@
       "fecha": "2026-06-21",
       "prediccion": 31,
       "real": 32,
+      "hora_prediccion": 8,
+      "hora_pico": 13,
+      "antes": true,
       "se_cumplio": false,
       "tasa_error_pct": 3.1,
       "diferencia": -1
@@ -429,6 +456,9 @@
       "fecha": "2026-06-20",
       "prediccion": 31,
       "real": 33,
+      "hora_prediccion": 14,
+      "hora_pico": 13,
+      "antes": false,
       "se_cumplio": false,
       "tasa_error_pct": 6.1,
       "diferencia": -2
@@ -437,6 +467,9 @@
       "fecha": "2026-06-19",
       "prediccion": 32,
       "real": 32,
+      "hora_prediccion": 6,
+      "hora_pico": 13,
+      "antes": true,
       "se_cumplio": true,
       "tasa_error_pct": 0.0,
       "diferencia": 0
@@ -445,6 +478,9 @@
       "fecha": "2026-06-18",
       "prediccion": 30,
       "real": 32,
+      "hora_prediccion": 12,
+      "hora_pico": 13,
+      "antes": true,
       "se_cumplio": false,
       "tasa_error_pct": 6.2,
       "diferencia": -2
@@ -453,6 +489,9 @@
       "fecha": "2026-06-17",
       "prediccion": 27,
       "real": 27,
+      "hora_prediccion": 12,
+      "hora_pico": 9,
+      "antes": false,
       "se_cumplio": true,
       "tasa_error_pct": 0.0,
       "diferencia": 0
