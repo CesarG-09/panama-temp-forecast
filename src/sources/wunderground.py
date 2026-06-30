@@ -95,6 +95,40 @@ def parse_actual(payload: dict, fecha) -> dict | None:
     return resultado
 
 
+def parse_horas_pico(payload: dict) -> dict:
+    """Hora local (Panamá) del máximo de `temp` por día. Empate -> la más temprana."""
+    tz = ZoneInfo(config.TZ)
+    mejor: dict = {}  # fecha_iso -> (temp_max, hora)
+    for obs in payload.get("observations", []):
+        temp = obs.get("temp")
+        ts = obs.get("valid_time_gmt")
+        if temp is None or ts is None:
+            continue
+        dt = datetime.fromtimestamp(ts, tz=tz)
+        fecha = dt.date().isoformat()
+        prev = mejor.get(fecha)
+        if prev is None or temp > prev[0] or (temp == prev[0] and dt.hour < prev[1]):
+            mejor[fecha] = (float(temp), dt.hour)
+    return {fecha: hora for fecha, (_, hora) in mejor.items()}
+
+
+def fetch_horas_pico(desde, hasta) -> dict:
+    """Hora del pico (local) por día en [desde, hasta]; una sola llamada a la API."""
+    api_key = os.environ.get("WUNDERGROUND_API_KEY")
+    if not api_key:
+        raise RuntimeError("Falta la variable de entorno WUNDERGROUND_API_KEY")
+    params = {
+        "apiKey": api_key,
+        "units": "m",
+        "startDate": desde.strftime("%Y%m%d"),
+        "endDate": hasta.strftime("%Y%m%d"),
+    }
+    resp = requests.get(API_URL.format(station=config.ESTACION), params=params,
+                        headers=_HEADERS, timeout=_TIMEOUT)
+    resp.raise_for_status()
+    return parse_horas_pico(resp.json())
+
+
 def fetch_curva_intradia(fecha) -> list[dict]:
     """Curva horaria observada de `fecha` desde la estación MPMG (API de Weather.com)."""
     api_key = os.environ.get("WUNDERGROUND_API_KEY")

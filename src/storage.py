@@ -8,6 +8,7 @@ _EVAL_COLS = ["fecha_objetivo", "hora_decision", "pico_pred", "pico_real", "erro
 _HOURLY_COLS = ["timestamp", "temp_c", "humedad", "nubosidad"]
 _OBS_COLS = ["fecha", "temp_max_c"]
 _FORECAST_COLS = ["fecha", "forecast_max"]
+_PEAK_COLS = ["fecha", "hora_pico"]
 
 
 def _read_csv(ruta, cols) -> pd.DataFrame:
@@ -23,6 +24,18 @@ def read_observations() -> pd.DataFrame:
 def upsert_observations(filas: list[dict]) -> None:
     ruta = config.ruta_observaciones()
     df = pd.concat([read_observations(), pd.DataFrame(filas)], ignore_index=True)
+    df = df.drop_duplicates("fecha", keep="last").sort_values("fecha")
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(ruta, index=False)
+
+
+def read_peak_hours() -> pd.DataFrame:
+    return _read_csv(config.ruta_peak_hours(), _PEAK_COLS)
+
+
+def upsert_peak_hours(filas: list[dict]) -> None:
+    ruta = config.ruta_peak_hours()
+    df = pd.concat([read_peak_hours(), pd.DataFrame(filas)], ignore_index=True)
     df = df.drop_duplicates("fecha", keep="last").sort_values("fecha")
     ruta.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(ruta, index=False)

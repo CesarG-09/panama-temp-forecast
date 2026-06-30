@@ -87,24 +87,35 @@ def _acierto_hora(evaluacion: pd.DataFrame, hora: int) -> tuple:
 
 
 def construir_tabla_historica(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
+                              horas_pico: dict | None = None,
                               n_dias: int = 20) -> list[dict]:
     """Registro por día (predicción final vs pico real) de los últimos `n_dias`
-    días con pico real, más reciente primero.
+    días con pico real, más reciente primero. Incluye la hora en que el modelo
+    fijó su valor y la hora del pico real (si está en `horas_pico`).
     """
     if len(predicciones) == 0 or len(observaciones) == 0:
         return []
+    horas_pico = horas_pico or {}
     real = dict(zip(observaciones["fecha"], observaciones["temp_max_c"]))
     filas = []
     for fecha, grupo in predicciones.groupby("fecha_objetivo"):
         if fecha not in real:
             continue
-        final = grupo.sort_values("hora_decision").iloc[-1]
-        pred = int(float(final["pico_pred"]))   # truncado a grados enteros (no se redondea)
+        g = grupo.sort_values("hora_decision")
+        pred = int(float(g.iloc[-1]["pico_pred"]))   # truncado a grados enteros
         r = int(float(real[fecha]))
+        match = g[g["pico_pred"].astype(int) == pred]
+        hora_prediccion = int(match.iloc[0]["hora_decision"])
+        hp = horas_pico.get(fecha)
+        hora_pico = int(hp) if hp is not None else None
+        antes = (hora_prediccion < hora_pico) if hora_pico is not None else None
         filas.append({
             "fecha": fecha,
             "prediccion": pred,
             "real": r,
+            "hora_prediccion": hora_prediccion,
+            "hora_pico": hora_pico,
+            "antes": antes,
             "se_cumplio": pred == r,
             "tasa_error_pct": round(abs(pred - r) / r * 100, 1),
             "diferencia": pred - r,
@@ -117,7 +128,8 @@ def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
                       evaluacion: pd.DataFrame, hoy: str,
                       curva_hoy: list | None = None,
                       generado: str | None = None,
-                      temp_actual: dict | None = None) -> dict:
+                      temp_actual: dict | None = None,
+                      horas_pico: dict | None = None) -> dict:
     hoy_preds = predicciones[predicciones["fecha_objetivo"] == hoy] \
         .sort_values("hora_decision")
 
@@ -157,7 +169,7 @@ def construir_payload(predicciones: pd.DataFrame, observaciones: pd.DataFrame,
         "error_por_hora": error_por_hora,
         "pasadas_vs_real": construir_pasadas_vs_real(predicciones, observaciones),
         "evolucion_modelo": construir_evolucion(evaluacion),
-        "tabla_historica": construir_tabla_historica(predicciones, observaciones),
+        "tabla_historica": construir_tabla_historica(predicciones, observaciones, horas_pico),
     }
 
 

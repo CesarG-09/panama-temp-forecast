@@ -50,6 +50,30 @@ def _temp_actual_mpmg(fecha: date) -> dict | None:
         return None
 
 
+def _horas_pico_cache(observaciones: pd.DataFrame, dias: int = 25) -> dict:
+    """Rellena (lazy) y devuelve el cache fecha->hora_pico de los últimos `dias`
+    días observados. Una sola llamada de rango a Wunderground para los faltantes;
+    si falla, deja el cache como está (se reintenta la próxima corrida).
+    """
+    cache = storage.read_peak_hours()
+    conocidas = set(cache["fecha"].astype(str))
+    recientes = [str(f) for f in observaciones.tail(dias)["fecha"]]
+    faltantes = sorted(f for f in recientes if f not in conocidas)
+    if faltantes:
+        try:
+            nuevas = wunderground.fetch_horas_pico(
+                date.fromisoformat(faltantes[0]), date.fromisoformat(faltantes[-1]))
+            faltantes_set = set(faltantes)
+            filas = [{"fecha": f, "hora_pico": int(h)}
+                     for f, h in nuevas.items() if f in faltantes_set]
+            if filas:
+                storage.upsert_peak_hours(filas)
+                cache = storage.read_peak_hours()
+        except Exception:
+            pass
+    return {str(r["fecha"]): int(r["hora_pico"]) for _, r in cache.iterrows()}
+
+
 def correr(hoy: date | None = None) -> None:
     hoy = hoy or datetime.now(ZoneInfo(config.TZ)).date()
     hora = _hora_local(hoy)
@@ -93,10 +117,12 @@ def correr(hoy: date | None = None) -> None:
     if curva is None:
         curva = _curva_observada(intradia, hora)
     temp_actual = _temp_actual_mpmg(hoy)
+    horas_pico = _horas_pico_cache(observaciones)
 
     payload = export.construir_payload(predicciones, observaciones, evaluacion,
                                        hoy=hoy.isoformat(),
-                                       curva_hoy=curva, temp_actual=temp_actual)
+                                       curva_hoy=curva, temp_actual=temp_actual,
+                                       horas_pico=horas_pico)
     export.exportar(RUTA_DATA_JSON, payload)
 
 

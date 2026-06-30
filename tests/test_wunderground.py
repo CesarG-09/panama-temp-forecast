@@ -54,3 +54,29 @@ def test_parse_actual_sin_datos_de_la_fecha_devuelve_none():
         {"valid_time_gmt": 1577883600, "temp": None},   # nulo
     ]}
     assert wunderground.parse_actual(payload, date(2020, 1, 1)) is None
+
+
+def test_parse_horas_pico_hora_del_maximo_por_dia():
+    # 1577880000 = 2020-01-01 07:00 Panamá; +3600=08:00; +7200=09:00
+    payload = {"observations": [
+        {"valid_time_gmt": 1577880000, "temp": 28.0},   # 07:00
+        {"valid_time_gmt": 1577883600, "temp": 31.0},   # 08:00  <- máximo
+        {"valid_time_gmt": 1577887200, "temp": 30.0},   # 09:00
+    ]}
+    assert wunderground.parse_horas_pico(payload) == {"2020-01-01": 8}
+
+
+def test_parse_horas_pico_empate_toma_la_hora_mas_temprana():
+    payload = {"observations": [
+        {"valid_time_gmt": 1577887200, "temp": 31.0},   # 09:00 (empate, más tarde)
+        {"valid_time_gmt": 1577883600, "temp": 31.0},   # 08:00 (empate, más temprano)
+    ]}
+    assert wunderground.parse_horas_pico(payload) == {"2020-01-01": 8}
+
+
+def test_parse_horas_pico_ignora_nulos():
+    payload = {"observations": [
+        {"valid_time_gmt": 1577883600, "temp": None},
+        {"valid_time_gmt": 1577887200, "temp": 30.0},   # 09:00
+    ]}
+    assert wunderground.parse_horas_pico(payload) == {"2020-01-01": 9}
