@@ -130,3 +130,26 @@ def test_predict_fuera_de_franja_no_registra(tmp_path, monkeypatch):
     with patch("src.predict._hora_local", return_value=3):
         predict.correr(hoy=hoy)
     assert len(storage.read_predictions()) == 0
+
+
+def test_horas_pico_cache_rellena_faltantes(monkeypatch, tmp_path):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(predict.wunderground, "fetch_horas_pico",
+                        lambda desde, hasta: {"2026-06-20": 13, "2026-06-21": 14})
+    obs = pd.DataFrame([{"fecha": "2026-06-20", "temp_max_c": 33.0},
+                        {"fecha": "2026-06-21", "temp_max_c": 32.0}])
+    out = predict._horas_pico_cache(obs)
+    assert out == {"2026-06-20": 13, "2026-06-21": 14}
+    assert set(storage.read_peak_hours()["fecha"]) == {"2026-06-20", "2026-06-21"}
+
+
+def test_horas_pico_cache_no_refetch_si_ya_esta(monkeypatch, tmp_path):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    storage.upsert_peak_hours([{"fecha": "2026-06-20", "hora_pico": 13}])
+
+    def boom(*a, **k):
+        raise AssertionError("no debería llamar a la API si ya está cacheado")
+
+    monkeypatch.setattr(predict.wunderground, "fetch_horas_pico", boom)
+    obs = pd.DataFrame([{"fecha": "2026-06-20", "temp_max_c": 33.0}])
+    assert predict._horas_pico_cache(obs) == {"2026-06-20": 13}
