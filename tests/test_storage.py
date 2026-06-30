@@ -12,6 +12,16 @@ def test_observations_roundtrip(tmp_path, monkeypatch):
     assert df.set_index("fecha").loc["2020-01-01", "temp_max_c"] == 32.0
 
 
+def test_upsert_y_read_peak_hours(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    storage.upsert_peak_hours([{"fecha": "2026-06-20", "hora_pico": 13}])
+    storage.upsert_peak_hours([{"fecha": "2026-06-20", "hora_pico": 14},   # reemplaza
+                               {"fecha": "2026-06-21", "hora_pico": 15}])
+    df = storage.read_peak_hours()
+    pares = dict(zip(df["fecha"], df["hora_pico"]))
+    assert pares == {"2026-06-20": 14, "2026-06-21": 15}
+
+
 def test_hourly_history_roundtrip_dedup(tmp_path, monkeypatch):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
     storage.upsert_hourly([{"timestamp": "2020-01-01T00:00", "temp_c": 24.0,

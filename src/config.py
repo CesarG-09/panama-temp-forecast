@@ -47,3 +47,7 @@ def ruta_forecast() -> Path:
 
 def ruta_modelo() -> Path:
     return model_dir() / "peak_model.txt"
+
+
+def ruta_peak_hours() -> Path:
+    return data_dir() / "peak_hours.csv"
