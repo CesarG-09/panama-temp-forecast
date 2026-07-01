@@ -1,14 +1,14 @@
 {
   "hoy": "2026-07-01",
-  "generado": "2026-07-01T08:00-05:00",
+  "generado": "2026-07-01T08:15-05:00",
   "temp_actual": {
     "temp_c": 27.0,
     "hora_local": "07:00"
   },
   "pico_hoy": {
-    "pico_pred": 33.1,
-    "p10": 31.8,
-    "p90": 33.2,
+    "pico_pred": 33.0,
+    "p10": 32.1,
+    "p90": 33.4,
     "hora_decision": 8,
     "prob_acierto": 7,
     "prob_n": 14
@@ -62,9 +62,9 @@
     },
     {
       "hora_decision": 8,
-      "pico_pred": 33.1,
-      "p10": 31.8,
-      "p90": 33.2
+      "pico_pred": 33.0,
+      "p10": 32.1,
+      "p90": 33.4
     }
   ],
   "error_por_hora": [
