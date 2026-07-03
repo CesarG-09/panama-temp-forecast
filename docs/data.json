@@ -1,6 +1,6 @@
 {
   "hoy": "2026-07-03",
-  "generado": "2026-07-03T06:45-05:00",
+  "generado": "2026-07-03T07:00-05:00",
   "temp_actual": {
     "temp_c": 27.0,
     "hora_local": "06:00"
@@ -9,7 +9,7 @@
     "pico_pred": 30.9,
     "p10": 29.9,
     "p90": 31.1,
-    "hora_decision": 6,
+    "hora_decision": 7,
     "prob_acierto": 14,
     "prob_n": 14
   },
@@ -46,6 +46,12 @@
   "convergencia_hoy": [
     {
       "hora_decision": 6,
+      "pico_pred": 30.9,
+      "p10": 29.9,
+      "p90": 31.1
+    },
+    {
+      "hora_decision": 7,
       "pico_pred": 30.9,
       "p10": 29.9,
       "p90": 31.1
