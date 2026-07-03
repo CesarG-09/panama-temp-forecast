@@ -50,6 +50,19 @@ def _temp_actual_mpmg(fecha: date) -> dict | None:
         return None
 
 
+def _aplicar_piso(p10: float, p50: float, p90: float,
+                  curva: list[dict] | None) -> tuple[float, float, float]:
+    """El pico del día nunca puede ser menor que el máximo ya observado en MPMG.
+
+    Corrige la incoherencia de predecir por debajo de una temperatura que la
+    estación ya registró. Sin curva (API caída) no se aplica nada.
+    """
+    if not curva:
+        return p10, p50, p90
+    piso = max(c["temp_c"] for c in curva)
+    return max(p10, piso), max(p50, piso), max(p90, piso)
+
+
 def _horas_pico_cache(observaciones: pd.DataFrame, dias: int = 25) -> dict:
     """Rellena (lazy) y devuelve el cache fecha->hora_pico de los últimos `dias`
     días observados. Una sola llamada de rango a Wunderground para los faltantes;
@@ -88,11 +101,15 @@ def correr(hoy: date | None = None) -> None:
     if len(intradia) == 0:
         return
 
-    # 3. Features y predicción.
+    # 3. Curva real de MPMG: se usa como piso de la predicción y en el dashboard.
+    curva_mpmg = _curva_observada_mpmg(hoy, hora)
+
+    # 4. Features y predicción.
     fila = features.construir_fila(intradia, fecha=hoy.isoformat(),
                                    hora_h=hora, forecast_max=forecast_max)
     modelo = ModeloPico.cargar(config.ruta_modelo())
     p10, p50, p90 = modelo.predecir(fila)
+    p10, p50, p90 = _aplicar_piso(p10, p50, p90, curva_mpmg)
 
     storage.append_prediction({
         "run_timestamp": datetime.now(ZoneInfo(config.TZ)).isoformat(timespec="seconds"),
@@ -104,7 +121,7 @@ def correr(hoy: date | None = None) -> None:
         "modelo_version": config.MODELO_VERSION,
     })
 
-    # 4. Evaluar días ya cerrados y exportar dashboard.
+    # 5. Evaluar días ya cerrados y exportar dashboard.
     predicciones = storage.read_predictions()
     observaciones = storage.read_observations()
     evaluacion = evaluate.evaluar(predicciones, observaciones)
@@ -113,7 +130,7 @@ def correr(hoy: date | None = None) -> None:
     # La curva y la temperatura actual salen de la estación real MPMG
     # (Wunderground) para que coincidan con su página; si la API falla, la
     # curva cae a Open-Meteo y la temperatura actual simplemente no se muestra.
-    curva = _curva_observada_mpmg(hoy, hora)
+    curva = curva_mpmg
     if curva is None:
         curva = _curva_observada(intradia, hora)
     temp_actual = _temp_actual_mpmg(hoy)
