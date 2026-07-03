@@ -9,6 +9,7 @@ _HOURLY_COLS = ["timestamp", "temp_c", "humedad", "nubosidad"]
 _OBS_COLS = ["fecha", "temp_max_c"]
 _FORECAST_COLS = ["fecha", "forecast_max"]
 _PEAK_COLS = ["fecha", "hora_pico"]
+_MPMG_COLS = ["fecha", "hora", "temp_c"]
 
 
 def _read_csv(ruta, cols) -> pd.DataFrame:
@@ -49,6 +50,19 @@ def upsert_hourly(filas: list[dict]) -> None:
     ruta = config.ruta_historico_horario()
     df = pd.concat([read_hourly(), pd.DataFrame(filas)], ignore_index=True)
     df = df.drop_duplicates("timestamp", keep="last").sort_values("timestamp")
+    ruta.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(ruta, index=False)
+
+
+def read_mpmg_hourly() -> pd.DataFrame:
+    return _read_csv(config.ruta_mpmg_horario(), _MPMG_COLS)
+
+
+def upsert_mpmg_hourly(filas: list[dict]) -> None:
+    ruta = config.ruta_mpmg_horario()
+    df = pd.concat([read_mpmg_hourly(), pd.DataFrame(filas)], ignore_index=True)
+    df = df.drop_duplicates(["fecha", "hora"], keep="last") \
+        .sort_values(["fecha", "hora"])
     ruta.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(ruta, index=False)
 

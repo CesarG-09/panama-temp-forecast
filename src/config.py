@@ -51,3 +51,7 @@ def ruta_modelo() -> Path:
 
 def ruta_peak_hours() -> Path:
     return data_dir() / "peak_hours.csv"
+
+
+def ruta_mpmg_horario() -> Path:
+    return data_dir() / "mpmg_hourly.csv"

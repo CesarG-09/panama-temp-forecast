@@ -77,3 +77,20 @@ def test_evaluation_write_read(tmp_path, monkeypatch):
     storage.write_evaluation(ev)
     df = storage.read_evaluation()
     assert df.iloc[0]["error_c"] == 0.6
+
+
+def test_upsert_mpmg_hourly_dedup_por_fecha_hora(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    storage.upsert_mpmg_hourly([
+        {"fecha": "2026-06-16", "hora": 10, "temp_c": 30.0},
+        {"fecha": "2026-06-16", "hora": 11, "temp_c": 31.0},
+    ])
+    storage.upsert_mpmg_hourly([
+        {"fecha": "2026-06-16", "hora": 11, "temp_c": 31.5},  # pisa la anterior
+        {"fecha": "2026-06-17", "hora": 9, "temp_c": 29.0},
+    ])
+    df = storage.read_mpmg_hourly()
+    assert len(df) == 3
+    fila_11 = df[(df["fecha"] == "2026-06-16") & (df["hora"] == 11)].iloc[0]
+    assert fila_11["temp_c"] == 31.5
+    assert list(df.columns) == ["fecha", "hora", "temp_c"]
