@@ -20,10 +20,18 @@ confianza** [p10, p90] que se estrecha conforme avanza el día.
     de modo que el backfill no depende de scraping día-a-día.
   - **Wunderground MPMG** — la *verdad de la estación* en el lazo en curso: en
     cada reentrenamiento nocturno su pico real sobreescribe el target de los
-    días recientes (si la API responde).
+    días recientes (si la API responde), y su **horario real**
+    (`data/mpmg_hourly.csv`) alimenta las features intradía de la estación.
 - **Features (solo lo conocible hasta la hora H):** calendario (día-del-año
   seno/coseno, mes), máximo-hasta-ahora, temperatura actual y rezagos, tasa de
-  subida, humedad, nubosidad y el forecast de Open-Meteo (feature nullable).
+  subida, humedad, nubosidad, el forecast de Open-Meteo (feature nullable) y la
+  curva real de MPMG (`temp_actual_mpmg`, `max_hasta_ahora_mpmg`, nullables).
+- **Regla dura:** la predicción (p10/p50/p90) nunca queda por debajo del máximo
+  ya observado en la estación MPMG a la hora de la corrida.
+- **Intervalo calibrado:** el reentrenamiento aparta los últimos 45 días como
+  conjunto de calibración conformal (CQR) y guarda el ajuste `q_hat` junto al
+  modelo (clave `calibracion` de `models/peak_model.txt`) para que la banda
+  p10–p90 cubra ~80% real.
 
 ## Flujo (workflows de GitHub Actions)
 
@@ -90,17 +98,21 @@ pip install -r requirements.txt
 python -m playwright install chromium   # solo si usas el respaldo de Wunderground
 python -m pytest -v                      # tests
 
-python -m src.backfill 2020-01-01        # carga inicial (Open-Meteo)
-python -m src.train                      # entrena el modelo
+python -m src.backfill 2020-01-01        # carga inicial (Open-Meteo + horario MPMG)
+python -m src.train                      # entrena el modelo (con calibración)
 python -m src.predict                    # una corrida de predicción
+python -m src.backtest 6                 # backtest de los últimos 6 meses
+python -m src.backtest 6 --sin-mpmg      # ídem sin features MPMG (baseline)
 ```
 
 ## Estructura
 
 - `src/` — código: `sources/` (openmeteo, wunderground), `features`, `dataset`,
-  `model`, `train`, `predict`, `backfill`, `evaluate`, `export`, `storage`, `config`.
-- `data/` — CSV versionados: `hourly_history.csv` (entrenamiento), `observations.csv`
-  (picos reales), `predictions.csv` (predicciones horarias), `evaluation.csv`.
+  `model`, `train`, `predict`, `backfill`, `backtest`, `evaluate`, `export`,
+  `storage`, `config`.
+- `data/` — CSV versionados: `hourly_history.csv` (entrenamiento), `mpmg_hourly.csv`
+  (horario real de la estación), `observations.csv` (picos reales),
+  `predictions.csv` (predicciones horarias), `evaluation.csv`.
 - `models/` — modelo entrenado versionado.
 - `docs/` — dashboard estático (GitHub Pages).
 - `.github/workflows/` — automatización (backfill + entrenamiento + horario).
