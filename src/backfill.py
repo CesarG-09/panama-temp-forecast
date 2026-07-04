@@ -53,6 +53,28 @@ def _corregir_con_wunderground(desde: date, hasta: date) -> None:
         cursor = fin_mes + timedelta(days=1)
 
 
+def _backfill_mpmg_horario(desde: date, hasta: date) -> None:
+    """Llena mpmg_hourly.csv con el horario real de la estación, mes a mes.
+
+    Alimenta las features intradía del modelo (temp_actual_mpmg,
+    max_hasta_ahora_mpmg). Un mes que falle (límite de tasa, hueco de la
+    estación) se omite con aviso y no interrumpe el resto; re-ejecutar el
+    backfill lo completa porque el guardado es upsert por (fecha, hora).
+    """
+    cursor = desde
+    while cursor <= hasta:
+        ultimo_dia = calendar.monthrange(cursor.year, cursor.month)[1]
+        fin_mes = min(date(cursor.year, cursor.month, ultimo_dia), hasta)
+        try:
+            filas = wunderground.fetch_horario_rango(cursor, fin_mes)
+            if filas:
+                storage.upsert_mpmg_hourly(filas)
+                print(f"  MPMG horario {cursor}..{fin_mes}: {len(filas)} filas")
+        except Exception as e:
+            print(f"  MPMG horario {cursor}..{fin_mes}: sin datos ({e})")
+        cursor = fin_mes + timedelta(days=1)
+
+
 def correr(desde: date | None = None, hasta: date | None = None) -> None:
     """Carga histórica: horario de Open-Meteo + pico diario derivado + corrección con MPMG.
 
@@ -85,6 +107,9 @@ def correr(desde: date | None = None, hasta: date | None = None) -> None:
     print("Corrigiendo con datos reales de Wunderground MPMG…")
     _corregir_con_wunderground(desde, hasta)
 
+    print("Descargando horario real de MPMG…")
+    _backfill_mpmg_horario(desde, hasta)
+
 
 def actualizar_reciente(dias: int = 7) -> None:
     """Refresca los últimos `dias` días: horario + pico diario + forecast_max.
@@ -109,6 +134,13 @@ def actualizar_reciente(dias: int = 7) -> None:
             storage.upsert_observations(obs)
     except Exception:
         pass  # si la API falla, queda el target derivado de Open-Meteo
+
+    try:
+        filas_mpmg = wunderground.fetch_horario_rango(desde, hasta)
+        if filas_mpmg:
+            storage.upsert_mpmg_hourly(filas_mpmg)
+    except Exception:
+        pass  # sin API las features MPMG de esos días quedan NaN
 
 
 if __name__ == "__main__":
