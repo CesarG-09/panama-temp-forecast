@@ -129,6 +129,44 @@ def fetch_horas_pico(desde, hasta) -> dict:
     return parse_horas_pico(resp.json())
 
 
+def parse_horario_rango(payload: dict) -> list[dict]:
+    """Máximo de `temp` por (fecha, hora) local de Panamá para todo el payload.
+
+    Es la versión multi-día de `parse_curva_intradia`: alimenta el histórico
+    horario de la estación (mpmg_hourly.csv) que usan las features del modelo.
+    """
+    tz = ZoneInfo(config.TZ)
+    por_clave: dict[tuple[str, int], float] = {}
+    for obs in payload.get("observations", []):
+        temp = obs.get("temp")
+        ts = obs.get("valid_time_gmt")
+        if temp is None or ts is None:
+            continue
+        dt = datetime.fromtimestamp(ts, tz=tz)
+        clave = (dt.date().isoformat(), dt.hour)
+        if clave not in por_clave or temp > por_clave[clave]:
+            por_clave[clave] = float(temp)
+    return [{"fecha": f, "hora": h, "temp_c": round(t, 1)}
+            for (f, h), t in sorted(por_clave.items())]
+
+
+def fetch_horario_rango(desde, hasta) -> list[dict]:
+    """Horario observado de MPMG en [desde, hasta]; una sola llamada a la API."""
+    api_key = os.environ.get("WUNDERGROUND_API_KEY")
+    if not api_key:
+        raise RuntimeError("Falta la variable de entorno WUNDERGROUND_API_KEY")
+    params = {
+        "apiKey": api_key,
+        "units": "m",
+        "startDate": desde.strftime("%Y%m%d"),
+        "endDate": hasta.strftime("%Y%m%d"),
+    }
+    resp = requests.get(API_URL.format(station=config.ESTACION), params=params,
+                        headers=_HEADERS, timeout=_TIMEOUT)
+    resp.raise_for_status()
+    return parse_horario_rango(resp.json())
+
+
 def fetch_curva_intradia(fecha) -> list[dict]:
     """Curva horaria observada de `fecha` desde la estación MPMG (API de Weather.com)."""
     api_key = os.environ.get("WUNDERGROUND_API_KEY")
