@@ -80,3 +80,19 @@ def test_parse_horas_pico_ignora_nulos():
         {"valid_time_gmt": 1577887200, "temp": 30.0},   # 09:00
     ]}
     assert wunderground.parse_horas_pico(payload) == {"2020-01-01": 9}
+
+
+def test_parse_horario_rango_agrupa_por_fecha_y_hora():
+    payload = {"observations": [
+        {"valid_time_gmt": 1781622000, "temp": 30.0},   # 16/6 10:00 local
+        {"valid_time_gmt": 1781623800, "temp": 30.6},   # 16/6 10:30 → máx de la hora 10
+        {"valid_time_gmt": 1781625600, "temp": 31.2},   # 16/6 11:00
+        {"valid_time_gmt": 1781708400, "temp": 29.0},   # 17/6 10:00
+        {"valid_time_gmt": 1781626000, "temp": None},   # sin temp: se ignora
+    ]}
+    filas = wunderground.parse_horario_rango(payload)
+    assert filas == [
+        {"fecha": "2026-06-16", "hora": 10, "temp_c": 30.6},
+        {"fecha": "2026-06-16", "hora": 11, "temp_c": 31.2},
+        {"fecha": "2026-06-17", "hora": 10, "temp_c": 29.0},
+    ]

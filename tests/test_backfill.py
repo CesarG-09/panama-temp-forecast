@@ -101,3 +101,39 @@ def test_actualizar_reciente_sin_wunderground_usa_open_meteo(tmp_path, monkeypat
     obs = storage.read_observations()
     fila = obs[obs["fecha"] == "2026-06-10"].iloc[0]
     assert fila["temp_max_c"] == 33.0  # cae al target de Open-Meteo, no se cuelga
+
+
+def test_backfill_mpmg_horario_mensual_tolera_fallos(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    llamadas = []
+
+    def fake_fetch(desde, hasta):
+        llamadas.append((desde.isoformat(), hasta.isoformat()))
+        if desde.month == 2:
+            raise RuntimeError("mes sin cobertura")
+        return [{"fecha": desde.isoformat(), "hora": 13, "temp_c": 31.0}]
+
+    monkeypatch.setattr(backfill.wunderground, "fetch_horario_rango", fake_fetch)
+    backfill._backfill_mpmg_horario(date(2026, 1, 15), date(2026, 3, 10))
+
+    # Tres bloques mensuales: 15/1-31/1, 1/2-28/2 (falla y no interrumpe), 1/3-10/3.
+    assert llamadas == [("2026-01-15", "2026-01-31"),
+                        ("2026-02-01", "2026-02-28"),
+                        ("2026-03-01", "2026-03-10")]
+    df = storage.read_mpmg_hourly()
+    assert set(df["fecha"]) == {"2026-01-15", "2026-03-01"}
+
+
+def test_actualizar_reciente_refresca_mpmg(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(backfill.openmeteo, "fetch_archivo", lambda d, h: [])
+    monkeypatch.setattr(backfill, "_backfill_forecast", lambda d, h: None)
+    monkeypatch.setattr(backfill.wunderground, "fetch_via_api",
+                        lambda d, h: [])
+    monkeypatch.setattr(backfill.wunderground, "fetch_horario_rango",
+                        lambda d, h: [{"fecha": "2026-06-16", "hora": 12,
+                                       "temp_c": 32.0}])
+    backfill.actualizar_reciente(dias=3)
+    df = storage.read_mpmg_hourly()
+    assert len(df) == 1
+    assert df.iloc[0]["temp_c"] == 32.0

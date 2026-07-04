@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 import numpy as np
 import pandas as pd
@@ -36,3 +37,6 @@ def test_train_entrena_y_guarda_modelo(tmp_path, monkeypatch):
             "humedad_actual": 80, "nubosidad_actual": 30, "forecast_max": None}
     p10, p50, p90 = modelo.predecir(fila)
     assert p10 <= p50 <= p90
+    # El archivo del modelo persiste la calibración (aunque con 40 días q_hat = 0).
+    payload = json.loads(config.ruta_modelo().read_text())
+    assert "calibracion" in payload

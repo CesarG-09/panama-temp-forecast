@@ -122,6 +122,54 @@ def test_predict_incluye_temp_actual_de_mpmg(tmp_path, monkeypatch):
     assert datos["temp_actual"] == actual
 
 
+def test_prediccion_no_baja_del_maximo_observado_mpmg(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("PTF_MODEL_DIR", str(tmp_path))
+    monkeypatch.setattr(predict, "RUTA_DATA_JSON", tmp_path / "data.json")
+    _sembrar_y_entrenar()
+
+    hoy = date(2026, 6, 16)
+    intradia = [{"timestamp": f"2026-06-16T{h:02d}:00", "temp_c": 24 + h * 0.5,
+                 "humedad": 85.0, "nubosidad": 40.0} for h in range(11)]
+    # La estación ya registró 36.0 °C a las 10; el modelo (entrenado ~32) queda por debajo.
+    wu_curva = [{"hora": h, "temp_c": 26.0 + h} for h in range(16)]
+    with patch("src.predict.openmeteo.fetch_intradia", return_value=intradia), \
+         patch("src.predict.openmeteo.fetch_forecast_max", return_value=33.0), \
+         patch("src.predict.wunderground.fetch_curva_intradia", return_value=wu_curva), \
+         patch("src.predict.wunderground.fetch_actual", return_value=None), \
+         patch("src.predict._hora_local", return_value=10):
+        predict.correr(hoy=hoy)
+
+    fila = storage.read_predictions().iloc[0]
+    # El máximo ya observado hasta las 10 es 36.0: ningún cuantil puede quedar debajo.
+    assert fila["p10"] >= 36.0
+    assert fila["pico_pred"] >= 36.0
+    assert fila["p90"] >= 36.0
+
+
+def test_sin_curva_mpmg_no_se_aplica_piso(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("PTF_MODEL_DIR", str(tmp_path))
+    monkeypatch.setattr(predict, "RUTA_DATA_JSON", tmp_path / "data.json")
+    _sembrar_y_entrenar()
+
+    hoy = date(2026, 6, 16)
+    intradia = [{"timestamp": f"2026-06-16T{h:02d}:00", "temp_c": 24 + h * 0.5,
+                 "humedad": 85.0, "nubosidad": 40.0} for h in range(11)]
+    with patch("src.predict.openmeteo.fetch_intradia", return_value=intradia), \
+         patch("src.predict.openmeteo.fetch_forecast_max", return_value=33.0), \
+         patch("src.predict.wunderground.fetch_curva_intradia",
+               side_effect=RuntimeError("sin key")), \
+         patch("src.predict.wunderground.fetch_actual",
+               side_effect=RuntimeError("sin key")), \
+         patch("src.predict._hora_local", return_value=10):
+        predict.correr(hoy=hoy)
+
+    fila = storage.read_predictions().iloc[0]
+    # Sin estación disponible la predicción queda como la dé el modelo (~32, no 36).
+    assert fila["pico_pred"] < 36.0
+
+
 def test_predict_fuera_de_franja_no_registra(tmp_path, monkeypatch):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("PTF_MODEL_DIR", str(tmp_path))

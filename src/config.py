@@ -11,7 +11,7 @@ TZ = "America/Panama"
 HORAS_DECISION = list(range(6, 17))  # 6am..4pm local
 UMBRAL_ACIERTO_C = 1.5
 FECHA_INICIO = date(2020, 1, 1)
-MODELO_VERSION = "gbm-q-v1"
+MODELO_VERSION = "gbm-q-v2"
 
 _DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _DEFAULT_MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
@@ -51,3 +51,7 @@ def ruta_modelo() -> Path:
 
 def ruta_peak_hours() -> Path:
     return data_dir() / "peak_hours.csv"
+
+
+def ruta_mpmg_horario() -> Path:
+    return data_dir() / "mpmg_hourly.csv"

@@ -7,6 +7,7 @@ FEATURE_COLS = [
     "hora_decision", "doy_sin", "doy_cos", "mes",
     "max_hasta_ahora", "temp_actual", "temp_lag1", "temp_lag2", "temp_lag3",
     "tasa_subida", "humedad_actual", "nubosidad_actual", "forecast_max",
+    "temp_actual_mpmg", "max_hasta_ahora_mpmg",
 ]
 
 
@@ -15,7 +16,8 @@ def _hora(ts: str) -> int:
 
 
 def construir_fila(intradia: pd.DataFrame, fecha: str, hora_h: int,
-                   forecast_max: float | None) -> dict:
+                   forecast_max: float | None,
+                   mpmg_intradia: list[dict] | None = None) -> dict:
     """Construye una fila de features usando solo horas <= hora_h del día `fecha`."""
     df = intradia.copy()
     df = df[df["timestamp"].str.startswith(fecha)]
@@ -40,6 +42,13 @@ def construir_fila(intradia: pd.DataFrame, fecha: str, hora_h: int,
         sel = hasta[col].dropna()
         return float(sel.iloc[-1]) if len(sel) else None
 
+    # Curva real de la estación (fuente del target): solo horas <= hora_h.
+    # La estación puede ir atrasada; "actual" = última hora disponible.
+    mpmg_hasta = sorted((c for c in (mpmg_intradia or [])
+                         if c["hora"] <= hora_h), key=lambda c: c["hora"])
+    temp_actual_mpmg = float(mpmg_hasta[-1]["temp_c"]) if mpmg_hasta else None
+    max_mpmg = max((float(c["temp_c"]) for c in mpmg_hasta), default=None)
+
     return {
         "fecha_objetivo": fecha,
         "hora_decision": hora_h,
@@ -55,4 +64,6 @@ def construir_fila(intradia: pd.DataFrame, fecha: str, hora_h: int,
         "humedad_actual": _ultimo("humedad"),
         "nubosidad_actual": _ultimo("nubosidad"),
         "forecast_max": forecast_max,
+        "temp_actual_mpmg": temp_actual_mpmg,
+        "max_hasta_ahora_mpmg": max_mpmg,
     }

@@ -1,5 +1,5 @@
 from src import backfill, config, dataset, storage
-from src.model import ModeloPico
+from src.model import entrenar_calibrado
 
 
 def correr(incremental: bool = True) -> None:
@@ -13,11 +13,13 @@ def correr(incremental: bool = True) -> None:
     fcst = storage.read_forecast()
     forecast_por_fecha = (dict(zip(fcst["fecha"], fcst["forecast_max"]))
                           if len(fcst) else {})
-    set_ent = dataset.construir_set(hist, obs, forecast_por_fecha)
+    mpmg = storage.read_mpmg_hourly()
+    set_ent = dataset.construir_set(hist, obs, forecast_por_fecha,
+                                    mpmg_horario=mpmg)
     if len(set_ent) == 0:
         raise RuntimeError("Set de entrenamiento vacío; ¿falta backfill?")
 
-    modelo = ModeloPico().ajustar(set_ent)
+    modelo = entrenar_calibrado(set_ent)
     modelo.guardar(config.ruta_modelo())
 
 
