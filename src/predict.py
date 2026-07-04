@@ -106,7 +106,8 @@ def correr(hoy: date | None = None) -> None:
 
     # 4. Features y predicción.
     fila = features.construir_fila(intradia, fecha=hoy.isoformat(),
-                                   hora_h=hora, forecast_max=forecast_max)
+                                   hora_h=hora, forecast_max=forecast_max,
+                                   mpmg_intradia=curva_mpmg)
     modelo = ModeloPico.cargar(config.ruta_modelo())
     p10, p50, p90 = modelo.predecir(fila)
     p10, p50, p90 = _aplicar_piso(p10, p50, p90, curva_mpmg)

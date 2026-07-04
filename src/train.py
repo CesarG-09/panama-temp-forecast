@@ -13,7 +13,9 @@ def correr(incremental: bool = True) -> None:
     fcst = storage.read_forecast()
     forecast_por_fecha = (dict(zip(fcst["fecha"], fcst["forecast_max"]))
                           if len(fcst) else {})
-    set_ent = dataset.construir_set(hist, obs, forecast_por_fecha)
+    mpmg = storage.read_mpmg_hourly()
+    set_ent = dataset.construir_set(hist, obs, forecast_por_fecha,
+                                    mpmg_horario=mpmg)
     if len(set_ent) == 0:
         raise RuntimeError("Set de entrenamiento vacío; ¿falta backfill?")
 

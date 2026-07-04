@@ -42,3 +42,18 @@ def test_construir_set_usa_forecast_por_fecha():
     assert fila_14["forecast_max"] == 31.5
     fila_15 = df[df["fecha_objetivo"] == "2026-06-15"].iloc[0]
     assert fila_15["forecast_max"] == 33.2
+
+
+def test_construir_set_incluye_features_mpmg():
+    hist = pd.DataFrame([
+        {"timestamp": f"2026-06-16T{h:02d}:00", "temp_c": 24.0 + h,
+         "humedad": 80.0, "nubosidad": 30.0} for h in range(17)])
+    obs = pd.DataFrame([{"fecha": "2026-06-16", "temp_max_c": 33.5}])
+    mpmg = pd.DataFrame([{"fecha": "2026-06-16", "hora": 9, "temp_c": 30.2},
+                         {"fecha": "2026-06-16", "hora": 10, "temp_c": 31.8}])
+    set_ent = dataset.construir_set(hist, obs, {}, mpmg_horario=mpmg)
+    fila_10 = set_ent[set_ent["hora_decision"] == 10].iloc[0]
+    assert fila_10["max_hasta_ahora_mpmg"] == 31.8
+    fila_6 = set_ent[set_ent["hora_decision"] == 6].iloc[0]
+    assert pd.isna(fila_6["max_hasta_ahora_mpmg"]) or \
+        fila_6["max_hasta_ahora_mpmg"] is None

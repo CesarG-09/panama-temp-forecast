@@ -19,6 +19,8 @@ def _set_entrenamiento(n_dias=60):
                 "temp_actual": 24 + h * 0.4, "temp_lag1": 24 + (h-1) * 0.4,
                 "temp_lag2": 23, "temp_lag3": 23, "tasa_subida": 0.4,
                 "humedad_actual": 80, "nubosidad_actual": 30, "forecast_max": pico,
+                "temp_actual_mpmg": 24 + h * 0.4,
+                "max_hasta_ahora_mpmg": 24 + h * 0.4,
                 "target": pico,
             })
     return pd.DataFrame(filas)

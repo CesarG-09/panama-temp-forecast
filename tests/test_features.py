@@ -35,3 +35,40 @@ def test_construir_fila_forecast_nullable():
     fila = features.construir_fila(_intradia(), fecha="2026-06-16",
                                    hora_h=10, forecast_max=None)
     assert fila["forecast_max"] is None
+
+
+def test_features_mpmg_presentes():
+    intradia = pd.DataFrame([
+        {"timestamp": f"2026-06-16T{h:02d}:00", "temp_c": 24.0 + h,
+         "humedad": 80.0, "nubosidad": 30.0} for h in range(12)])
+    mpmg = [{"hora": 8, "temp_c": 28.5}, {"hora": 9, "temp_c": 30.1},
+            {"hora": 10, "temp_c": 31.4}, {"hora": 12, "temp_c": 33.0}]
+    fila = features.construir_fila(intradia, fecha="2026-06-16", hora_h=10,
+                                   forecast_max=32.0, mpmg_intradia=mpmg)
+    # Solo cuenta lo observado hasta la hora de decisión (10): la hora 12 no.
+    assert fila["temp_actual_mpmg"] == 31.4
+    assert fila["max_hasta_ahora_mpmg"] == 31.4
+
+
+def test_features_mpmg_usa_ultima_hora_disponible():
+    intradia = pd.DataFrame([
+        {"timestamp": f"2026-06-16T{h:02d}:00", "temp_c": 24.0 + h,
+         "humedad": 80.0, "nubosidad": 30.0} for h in range(12)])
+    # La estación va atrasada: su última hora es 9 aunque decidimos a las 11.
+    mpmg = [{"hora": 8, "temp_c": 31.0}, {"hora": 9, "temp_c": 29.5}]
+    fila = features.construir_fila(intradia, fecha="2026-06-16", hora_h=11,
+                                   forecast_max=32.0, mpmg_intradia=mpmg)
+    assert fila["temp_actual_mpmg"] == 29.5      # última disponible <= 11
+    assert fila["max_hasta_ahora_mpmg"] == 31.0  # máximo hasta las 11
+
+
+def test_features_mpmg_none_sin_datos():
+    intradia = pd.DataFrame([
+        {"timestamp": "2026-06-16T08:00", "temp_c": 27.0,
+         "humedad": 80.0, "nubosidad": 30.0}])
+    fila = features.construir_fila(intradia, fecha="2026-06-16", hora_h=8,
+                                   forecast_max=None)
+    assert fila["temp_actual_mpmg"] is None
+    assert fila["max_hasta_ahora_mpmg"] is None
+    assert "temp_actual_mpmg" in features.FEATURE_COLS
+    assert "max_hasta_ahora_mpmg" in features.FEATURE_COLS
