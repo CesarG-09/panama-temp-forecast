@@ -1,5 +1,5 @@
 from src import backfill, config, dataset, storage
-from src.model import ModeloPico
+from src.model import entrenar_calibrado
 
 
 def correr(incremental: bool = True) -> None:
@@ -19,7 +19,7 @@ def correr(incremental: bool = True) -> None:
     if len(set_ent) == 0:
         raise RuntimeError("Set de entrenamiento vacío; ¿falta backfill?")
 
-    modelo = ModeloPico().ajustar(set_ent)
+    modelo = entrenar_calibrado(set_ent)
     modelo.guardar(config.ruta_modelo())
 
 
