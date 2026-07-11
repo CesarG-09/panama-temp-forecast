@@ -1,114 +1,50 @@
 {
-  "hoy": "2026-07-10",
-  "generado": "2026-07-10T16:31-05:00",
+  "hoy": "2026-07-11",
+  "generado": "2026-07-11T07:11-05:00",
   "temp_actual": {
-    "temp_c": 30.0,
-    "hora_local": "15:00"
+    "temp_c": 27.0,
+    "hora_local": "06:00"
   },
   "pico_hoy": {
-    "pico_pred": 30.0,
-    "p10": 30.0,
-    "p90": 30.7,
-    "hora_decision": 16,
-    "prob_acierto": 47,
-    "prob_n": 19
+    "pico_pred": 31.0,
+    "p10": 29.3,
+    "p90": 32.1,
+    "hora_decision": 7,
+    "prob_acierto": 12,
+    "prob_n": 17
   },
   "curva_hoy": [
     {
       "hora": 0,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 1,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 2,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 3,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 4,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 5,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 6,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 7,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 8,
-      "temp_c": 26.0
-    },
-    {
-      "hora": 9,
       "temp_c": 28.0
     },
     {
-      "hora": 10,
-      "temp_c": 30.0
+      "hora": 1,
+      "temp_c": 27.0
     },
     {
-      "hora": 11,
-      "temp_c": 29.0
+      "hora": 2,
+      "temp_c": 27.0
     },
     {
-      "hora": 12,
-      "temp_c": 30.0
+      "hora": 4,
+      "temp_c": 27.0
     },
     {
-      "hora": 13,
-      "temp_c": 30.0
+      "hora": 5,
+      "temp_c": 27.0
     },
     {
-      "hora": 14,
-      "temp_c": 30.0
-    },
-    {
-      "hora": 15,
-      "temp_c": 30.0
+      "hora": 6,
+      "temp_c": 27.0
     }
   ],
   "convergencia_hoy": [
     {
-      "hora_decision": 8,
-      "pico_pred": 32.0,
-      "p10": 30.5,
-      "p90": 32.9
-    },
-    {
-      "hora_decision": 10,
-      "pico_pred": 32.0,
-      "p10": 30.3,
-      "p90": 32.9
-    },
-    {
-      "hora_decision": 13,
-      "pico_pred": 30.5,
-      "p10": 30.0,
-      "p90": 32.3
-    },
-    {
-      "hora_decision": 14,
-      "pico_pred": 30.1,
-      "p10": 30.0,
-      "p90": 31.0
-    },
-    {
-      "hora_decision": 16,
-      "pico_pred": 30.0,
-      "p10": 30.0,
-      "p90": 30.7
+      "hora_decision": 7,
+      "pico_pred": 31.0,
+      "p10": 29.3,
+      "p90": 32.1
     }
   ],
   "error_por_hora": [
@@ -122,7 +58,7 @@
     },
     {
       "hora_decision": 8,
-      "error_medio_abs": 1.13
+      "error_medio_abs": 1.17
     },
     {
       "hora_decision": 9,
@@ -130,7 +66,7 @@
     },
     {
       "hora_decision": 10,
-      "error_medio_abs": 0.93
+      "error_medio_abs": 0.99
     },
     {
       "hora_decision": 11,
@@ -142,11 +78,11 @@
     },
     {
       "hora_decision": 13,
-      "error_medio_abs": 0.82
+      "error_medio_abs": 0.8
     },
     {
       "hora_decision": 14,
-      "error_medio_abs": 0.74
+      "error_medio_abs": 0.7
     },
     {
       "hora_decision": 15,
@@ -154,7 +90,7 @@
     },
     {
       "hora_decision": 16,
-      "error_medio_abs": 0.7
+      "error_medio_abs": 0.67
     }
   ],
   "pasadas_vs_real": [
@@ -341,6 +277,14 @@
       "manana_p10": 30.4,
       "manana_p90": 32.8,
       "final_p50": 33.0
+    },
+    {
+      "fecha": "2026-07-10",
+      "real": 30.0,
+      "manana_p50": 32.0,
+      "manana_p10": 30.5,
+      "manana_p90": 32.9,
+      "final_p50": 30.0
     }
   ],
   "evolucion_modelo": [
@@ -550,9 +494,29 @@
       "mae7_final": 0.2,
       "acierto7_manana": 0.714,
       "acierto7_final": 1.0
+    },
+    {
+      "fecha": "2026-07-10",
+      "err_manana": 2.0,
+      "err_final": 0.0,
+      "mae7_manana": 1.31,
+      "mae7_final": 0.03,
+      "acierto7_manana": 0.571,
+      "acierto7_final": 1.0
     }
   ],
   "tabla_historica": [
+    {
+      "fecha": "2026-07-10",
+      "prediccion": 30,
+      "real": 30,
+      "hora_prediccion": 13,
+      "hora_pico": 10,
+      "antes": false,
+      "se_cumplio": true,
+      "tasa_error_pct": 0.0,
+      "diferencia": 0
+    },
     {
       "fecha": "2026-07-09",
       "prediccion": 33,
@@ -761,17 +725,6 @@
       "se_cumplio": false,
       "tasa_error_pct": 3.1,
       "diferencia": -1
-    },
-    {
-      "fecha": "2026-06-20",
-      "prediccion": 31,
-      "real": 33,
-      "hora_prediccion": 14,
-      "hora_pico": 13,
-      "antes": false,
-      "se_cumplio": false,
-      "tasa_error_pct": 6.1,
-      "diferencia": -2
     }
   ]
 }
