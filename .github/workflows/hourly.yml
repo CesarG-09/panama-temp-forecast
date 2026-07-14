@@ -4,6 +4,9 @@ on:
   schedule:
     # Minuto :23 (no :00): GitHub descarta/retrasa los crons a la hora en punto.
     - cron: "23 11-21 * * *"   # 06:23–16:23 Panamá (UTC-5)
+    # Corrida de cierre a las 11:45 Panamá: última predicción antes del corte
+    # de las 12 (config.HORA_CORTE), por si el disparo de las 11:23 se pierde.
+    - cron: "45 16 * * *"      # 11:45 Panamá (UTC-5)
   workflow_dispatch:
 
 permissions:

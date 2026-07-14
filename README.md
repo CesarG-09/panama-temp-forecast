@@ -28,6 +28,12 @@ confianza** [p10, p90] que se estrecha conforme avanza el día.
   curva real de MPMG (`temp_actual_mpmg`, `max_hasta_ahora_mpmg`, nullables).
 - **Regla dura:** la predicción (p10/p50/p90) nunca queda por debajo del máximo
   ya observado en la estación MPMG a la hora de la corrida.
+- **Hora de corte (12 pm):** la predicción oficial del día queda congelada
+  **antes del mediodía** (`config.HORA_CORTE`), porque el pico efectivo ocurre
+  entre las 12 y las 2 pm y una "predicción" emitida después ya lo vio. Las
+  corridas de la tarde no emiten predicción: solo refrescan la curva observada,
+  la evaluación y el dashboard. Todas las métricas ("final", acierto, tabla
+  histórica) usan la última predicción emitida antes de las 12.
 - **Intervalo calibrado:** el reentrenamiento aparta los últimos 45 días como
   conjunto de calibración conformal (CQR) y guarda el ajuste `q_hat` junto al
   modelo (clave `calibracion` de `models/peak_model.txt`) para que la banda
@@ -40,8 +46,10 @@ confianza** [p10, p90] que se estrecha conforme avanza el día.
 - **`train.yml`** (nocturno, 06:00 UTC) — actualiza los días recientes
   (Open-Meteo + verdad de Wunderground), reentrena los modelos y guarda
   `models/peak_model.txt`.
-- **`hourly.yml`** (cada hora 11:00–21:00 UTC = 6am–4pm Panamá) — predice el pico
-  de hoy, registra la predicción, evalúa los días cerrados y publica el dashboard.
+- **`hourly.yml`** (cada hora 11:00–21:00 UTC = 6am–4pm Panamá, más una corrida
+  de cierre a las 16:45 UTC = 11:45am) — antes de las 12 predice el pico de hoy y
+  registra la predicción; después del corte solo evalúa los días cerrados,
+  refresca la curva y publica el dashboard.
   El `cron` de GitHub es *best-effort*: en horas de carga descarta o retrasa los
   disparos, así que la fuente **puntual** es un cron externo vía `workflow_dispatch`
   (ver [Disparo puntual](#disparo-puntual-cron-externo)); el `cron` queda de respaldo.
@@ -87,6 +95,8 @@ gratis y puntual al minuto; sirve cualquiera que haga POST con cabeceras y cuerp
 - **Cuerpo (JSON):** `{"ref":"main"}`
 - **Horario:** cada hora **de 6:00 a 16:00, zona horaria `America/Panama`**
   (cron-job.org permite elegir la zona; si solo acepta UTC, usa 11:00–21:00).
+  Añade además un disparo a las **11:45** (16:45 UTC): es la corrida de cierre
+  que deja la predicción oficial congelada justo antes del corte de las 12.
 
 Una respuesta `204 No Content` significa que el disparo se aceptó. Verifica en
 *Actions* que la corrida aparece con evento `workflow_dispatch`.

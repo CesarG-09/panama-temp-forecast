@@ -170,6 +170,76 @@ def test_sin_curva_mpmg_no_se_aplica_piso(tmp_path, monkeypatch):
     assert fila["pico_pred"] < 36.0
 
 
+def test_despues_del_corte_no_predice_pero_si_exporta(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("PTF_MODEL_DIR", str(tmp_path))
+    monkeypatch.setattr(predict, "RUTA_DATA_JSON", tmp_path / "data.json")
+    _sembrar_y_entrenar()
+
+    hoy = date(2026, 6, 16)
+
+    def intradia(hasta):
+        return [{"timestamp": f"2026-06-16T{h:02d}:00", "temp_c": 24 + h * 0.5,
+                 "humedad": 85.0, "nubosidad": 40.0} for h in range(hasta + 1)]
+
+    with patch("src.predict.openmeteo.fetch_forecast_max", return_value=33.0), \
+         patch("src.predict.wunderground.fetch_curva_intradia",
+               side_effect=RuntimeError("sin key")), \
+         patch("src.predict.wunderground.fetch_actual",
+               side_effect=RuntimeError("sin key")):
+        # Corrida de la mañana (11): emite la predicción oficial del día.
+        with patch("src.predict.openmeteo.fetch_intradia", return_value=intradia(11)), \
+             patch("src.predict._hora_local", return_value=11):
+            predict.correr(hoy=hoy)
+        # Corrida de la tarde (13): ya vio el pico, no debe emitir predicción.
+        with patch("src.predict.openmeteo.fetch_intradia", return_value=intradia(13)), \
+             patch("src.predict._hora_local", return_value=13):
+            predict.correr(hoy=hoy)
+
+    preds = storage.read_predictions()
+    assert list(preds["hora_decision"]) == [11]
+
+    # La tarde sí refresca el dashboard: la curva llega hasta las 13, pero el
+    # pico mostrado sigue siendo la predicción congelada de las 11.
+    datos = json.loads((tmp_path / "data.json").read_text())
+    assert datos["curva_hoy"][-1]["hora"] == 13
+    assert datos["pico_hoy"]["hora_decision"] == 11
+
+
+def test_evaluacion_ignora_predicciones_posteriores_al_corte(tmp_path, monkeypatch):
+    monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("PTF_MODEL_DIR", str(tmp_path))
+    monkeypatch.setattr(predict, "RUTA_DATA_JSON", tmp_path / "data.json")
+    _sembrar_y_entrenar()
+
+    # Histórico previo a la regla del corte: un día cerrado con predicción de
+    # la mañana y otra de la tarde (hecha cuando el pico ya había ocurrido).
+    ayer = "2026-06-15"
+    for hora, pico in [(10, 31.0), (15, 33.0)]:
+        storage.append_prediction({
+            "run_timestamp": f"{ayer}T{hora:02d}:00:00", "fecha_objetivo": ayer,
+            "hora_decision": hora, "pico_pred": pico, "p10": pico - 1,
+            "p90": pico + 1, "modelo_version": "gbm-q-v2"})
+    storage.upsert_observations([{"fecha": ayer, "temp_max_c": 33.0}])
+
+    hoy = date(2026, 6, 16)
+    intradia = [{"timestamp": f"2026-06-16T{h:02d}:00", "temp_c": 24 + h * 0.5,
+                 "humedad": 85.0, "nubosidad": 40.0} for h in range(11)]
+    with patch("src.predict.openmeteo.fetch_intradia", return_value=intradia), \
+         patch("src.predict.openmeteo.fetch_forecast_max", return_value=33.0), \
+         patch("src.predict.wunderground.fetch_curva_intradia",
+               side_effect=RuntimeError("sin key")), \
+         patch("src.predict.wunderground.fetch_actual",
+               side_effect=RuntimeError("sin key")), \
+         patch("src.predict._hora_local", return_value=10):
+        predict.correr(hoy=hoy)
+
+    # Solo la predicción de las 10 cuenta; la de las 15 no entra a las métricas.
+    ev = storage.read_evaluation()
+    filas_ayer = ev[ev["fecha_objetivo"] == ayer]
+    assert list(filas_ayer["hora_decision"]) == [10]
+
+
 def test_predict_fuera_de_franja_no_registra(tmp_path, monkeypatch):
     monkeypatch.setenv("PTF_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("PTF_MODEL_DIR", str(tmp_path))

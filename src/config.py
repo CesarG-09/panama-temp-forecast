@@ -8,7 +8,11 @@ LAT = 8.973
 LON = -79.556
 TZ = "America/Panama"
 
-HORAS_DECISION = list(range(6, 17))  # 6am..4pm local
+HORAS_DECISION = list(range(6, 17))  # 6am..4pm local: franja en que corre el pipeline
+# La predicción oficial se congela antes de esta hora: el pico efectivo del día
+# ocurre entre las 12 y las 2 pm, y una predicción emitida a partir de las 12
+# ya no anticipa nada (el piso MPMG la vuelve el máximo observado).
+HORA_CORTE = 12
 UMBRAL_ACIERTO_C = 1.5
 FECHA_INICIO = date(2020, 1, 1)
 MODELO_VERSION = "gbm-q-v2"

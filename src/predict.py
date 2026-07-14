@@ -104,26 +104,35 @@ def correr(hoy: date | None = None) -> None:
     # 3. Curva real de MPMG: se usa como piso de la predicción y en el dashboard.
     curva_mpmg = _curva_observada_mpmg(hoy, hora)
 
-    # 4. Features y predicción.
-    fila = features.construir_fila(intradia, fecha=hoy.isoformat(),
-                                   hora_h=hora, forecast_max=forecast_max,
-                                   mpmg_intradia=curva_mpmg)
-    modelo = ModeloPico.cargar(config.ruta_modelo())
-    p10, p50, p90 = modelo.predecir(fila)
-    p10, p50, p90 = _aplicar_piso(p10, p50, p90, curva_mpmg)
+    # 4. Features y predicción — solo antes del corte: la predicción oficial
+    # debe quedar congelada antes de las 12, porque el pico efectivo ocurre
+    # entre las 12 y las 2 pm y una "predicción" posterior ya lo vio. Las
+    # corridas de la tarde solo refrescan curva, evaluación y dashboard.
+    if hora < config.HORA_CORTE:
+        fila = features.construir_fila(intradia, fecha=hoy.isoformat(),
+                                       hora_h=hora, forecast_max=forecast_max,
+                                       mpmg_intradia=curva_mpmg)
+        modelo = ModeloPico.cargar(config.ruta_modelo())
+        p10, p50, p90 = modelo.predecir(fila)
+        p10, p50, p90 = _aplicar_piso(p10, p50, p90, curva_mpmg)
 
-    storage.append_prediction({
-        "run_timestamp": datetime.now(ZoneInfo(config.TZ)).isoformat(timespec="seconds"),
-        "fecha_objetivo": hoy.isoformat(),
-        "hora_decision": hora,
-        "pico_pred": p50,
-        "p10": p10,
-        "p90": p90,
-        "modelo_version": config.MODELO_VERSION,
-    })
+        storage.append_prediction({
+            "run_timestamp": datetime.now(ZoneInfo(config.TZ)).isoformat(timespec="seconds"),
+            "fecha_objetivo": hoy.isoformat(),
+            "hora_decision": hora,
+            "pico_pred": p50,
+            "p10": p10,
+            "p90": p90,
+            "modelo_version": config.MODELO_VERSION,
+        })
 
-    # 5. Evaluar días ya cerrados y exportar dashboard.
+    # 5. Evaluar días ya cerrados y exportar dashboard. Solo cuentan las
+    # predicciones emitidas antes del corte, incluso en el histórico previo a
+    # esta regla: así "final" significa siempre la última predicción hecha
+    # antes del mediodía y las métricas no se contaminan con corridas que ya
+    # habían visto el pico.
     predicciones = storage.read_predictions()
+    predicciones = predicciones[predicciones["hora_decision"] < config.HORA_CORTE]
     observaciones = storage.read_observations()
     evaluacion = evaluate.evaluar(predicciones, observaciones)
     storage.write_evaluation(evaluacion)
