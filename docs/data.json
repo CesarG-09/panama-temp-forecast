@@ -1,16 +1,16 @@
 {
   "hoy": "2026-07-14",
-  "generado": "2026-07-14T07:44-05:00",
+  "generado": "2026-07-14T10:06-05:00",
   "temp_actual": {
-    "temp_c": 26.0,
-    "hora_local": "06:00"
+    "temp_c": 29.0,
+    "hora_local": "09:00"
   },
   "pico_hoy": {
     "pico_pred": 33.0,
     "p10": 32.0,
-    "p90": 33.6,
-    "hora_decision": 7,
-    "prob_acierto": 16,
+    "p90": 33.5,
+    "hora_decision": 10,
+    "prob_acierto": 5,
     "prob_n": 19
   },
   "curva_hoy": [
@@ -41,6 +41,18 @@
     {
       "hora": 6,
       "temp_c": 26.0
+    },
+    {
+      "hora": 7,
+      "temp_c": 26.0
+    },
+    {
+      "hora": 8,
+      "temp_c": 27.0
+    },
+    {
+      "hora": 9,
+      "temp_c": 29.0
     }
   ],
   "convergencia_hoy": [
@@ -49,6 +61,12 @@
       "pico_pred": 33.0,
       "p10": 32.0,
       "p90": 33.6
+    },
+    {
+      "hora_decision": 10,
+      "pico_pred": 33.0,
+      "p10": 32.0,
+      "p90": 33.5
     }
   ],
   "error_por_hora": [
