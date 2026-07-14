@@ -1,9 +1,9 @@
 {
   "hoy": "2026-07-14",
-  "generado": "2026-07-14T13:34-05:00",
+  "generado": "2026-07-14T15:35-05:00",
   "temp_actual": {
-    "temp_c": 33.0,
-    "hora_local": "13:00"
+    "temp_c": 31.0,
+    "hora_local": "15:00"
   },
   "pico_hoy": {
     "pico_pred": 33.0,
@@ -69,6 +69,14 @@
     {
       "hora": 13,
       "temp_c": 33.0
+    },
+    {
+      "hora": 14,
+      "temp_c": 31.0
+    },
+    {
+      "hora": 15,
+      "temp_c": 31.0
     }
   ],
   "convergencia_hoy": [
