@@ -1,9 +1,9 @@
 {
   "hoy": "2026-07-26",
-  "generado": "2026-07-26T13:29-05:00",
+  "generado": "2026-07-26T15:27-05:00",
   "temp_actual": {
     "temp_c": 32.0,
-    "hora_local": "13:00"
+    "hora_local": "15:00"
   },
   "pico_hoy": {
     "pico_pred": 33.5,
@@ -68,6 +68,14 @@
     },
     {
       "hora": 13,
+      "temp_c": 32.0
+    },
+    {
+      "hora": 14,
+      "temp_c": 30.0
+    },
+    {
+      "hora": 15,
       "temp_c": 32.0
     }
   ],
