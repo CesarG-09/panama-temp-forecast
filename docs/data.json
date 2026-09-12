@@ -1,22 +1,22 @@
 {
-  "hoy": "2026-09-11",
-  "generado": "2026-09-11T16:48-05:00",
+  "hoy": "2026-09-12",
+  "generado": "2026-09-12T09:14-05:00",
   "temp_actual": {
     "temp_c": 28.0,
-    "hora_local": "15:00"
+    "hora_local": "08:00"
   },
   "pico_hoy": {
-    "pico_pred": 32.9,
-    "p10": 31.0,
+    "pico_pred": 32.0,
+    "p10": 31.4,
     "p90": 33.1,
-    "hora_decision": 10,
-    "prob_acierto": 25,
-    "prob_n": 40
+    "hora_decision": 9,
+    "prob_acierto": 11,
+    "prob_n": 28
   },
   "curva_hoy": [
     {
       "hora": 0,
-      "temp_c": 28.0
+      "temp_c": 27.0
     },
     {
       "hora": 1,
@@ -36,7 +36,7 @@
     },
     {
       "hora": 5,
-      "temp_c": 27.0
+      "temp_c": 26.0
     },
     {
       "hora": 6,
@@ -49,41 +49,13 @@
     {
       "hora": 8,
       "temp_c": 28.0
-    },
-    {
-      "hora": 9,
-      "temp_c": 30.0
-    },
-    {
-      "hora": 10,
-      "temp_c": 31.0
-    },
-    {
-      "hora": 11,
-      "temp_c": 31.0
-    },
-    {
-      "hora": 12,
-      "temp_c": 32.0
-    },
-    {
-      "hora": 13,
-      "temp_c": 30.0
-    },
-    {
-      "hora": 14,
-      "temp_c": 29.0
-    },
-    {
-      "hora": 15,
-      "temp_c": 28.0
     }
   ],
   "convergencia_hoy": [
     {
-      "hora_decision": 10,
-      "pico_pred": 32.9,
-      "p10": 31.0,
+      "hora_decision": 9,
+      "pico_pred": 32.0,
+      "p10": 31.4,
       "p90": 33.1
     }
   ],
@@ -114,14 +86,6 @@
     }
   ],
   "pasadas_vs_real": [
-    {
-      "fecha": "2026-07-13",
-      "real": 29.0,
-      "manana_p50": 31.0,
-      "manana_p10": 29.3,
-      "manana_p90": 32.0,
-      "final_p50": 29.9
-    },
     {
       "fecha": "2026-07-14",
       "real": 33.0,
@@ -353,6 +317,14 @@
       "manana_p10": 30.6,
       "manana_p90": 32.9,
       "final_p50": 32.0
+    },
+    {
+      "fecha": "2026-09-11",
+      "real": 32.0,
+      "manana_p50": 32.9,
+      "manana_p10": 31.0,
+      "manana_p90": 33.1,
+      "final_p50": 32.9
     }
   ],
   "evolucion_modelo": [
@@ -859,9 +831,29 @@
       "mae7_final": 0.7,
       "acierto7_manana": 0.857,
       "acierto7_final": 0.857
+    },
+    {
+      "fecha": "2026-09-11",
+      "err_manana": 0.9,
+      "err_final": 0.9,
+      "mae7_manana": 0.84,
+      "mae7_final": 0.76,
+      "acierto7_manana": 0.857,
+      "acierto7_final": 0.857
     }
   ],
   "tabla_historica": [
+    {
+      "fecha": "2026-09-11",
+      "prediccion": 32,
+      "real": 32,
+      "hora_prediccion": 10,
+      "hora_pico": 12,
+      "antes": true,
+      "se_cumplio": true,
+      "tasa_error_pct": 0.0,
+      "diferencia": 0
+    },
     {
       "fecha": "2026-09-10",
       "prediccion": 32,
@@ -1070,17 +1062,6 @@
       "se_cumplio": false,
       "tasa_error_pct": 3.3,
       "diferencia": 1
-    },
-    {
-      "fecha": "2026-07-23",
-      "prediccion": 28,
-      "real": 29,
-      "hora_prediccion": 10,
-      "hora_pico": 10,
-      "antes": false,
-      "se_cumplio": false,
-      "tasa_error_pct": 3.4,
-      "diferencia": -1
     }
   ]
 }
