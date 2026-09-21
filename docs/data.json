@@ -1,9 +1,9 @@
 {
   "hoy": "2026-09-21",
-  "generado": "2026-09-21T12:07-05:00",
+  "generado": "2026-09-21T15:34-05:00",
   "temp_actual": {
     "temp_c": 30.0,
-    "hora_local": "11:00"
+    "hora_local": "15:00"
   },
   "pico_hoy": null,
   "curva_hoy": [
@@ -53,6 +53,22 @@
     },
     {
       "hora": 11,
+      "temp_c": 30.0
+    },
+    {
+      "hora": 12,
+      "temp_c": 30.0
+    },
+    {
+      "hora": 13,
+      "temp_c": 30.0
+    },
+    {
+      "hora": 14,
+      "temp_c": 31.0
+    },
+    {
+      "hora": 15,
       "temp_c": 30.0
     }
   ],
