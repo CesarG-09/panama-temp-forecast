@@ -1,9 +1,9 @@
 {
   "hoy": "2026-10-06",
-  "generado": "2026-10-06T12:18-05:00",
+  "generado": "2026-10-06T16:13-05:00",
   "temp_actual": {
     "temp_c": 28.0,
-    "hora_local": "11:00"
+    "hora_local": "15:00"
   },
   "pico_hoy": null,
   "curva_hoy": [
@@ -53,6 +53,18 @@
     },
     {
       "hora": 11,
+      "temp_c": 28.0
+    },
+    {
+      "hora": 13,
+      "temp_c": 29.0
+    },
+    {
+      "hora": 14,
+      "temp_c": 26.0
+    },
+    {
+      "hora": 15,
       "temp_c": 28.0
     }
   ],
