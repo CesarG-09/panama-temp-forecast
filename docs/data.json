@@ -1,6 +1,6 @@
 {
   "hoy": "2026-10-25",
-  "generado": "2026-10-25T13:28-05:00",
+  "generado": "2026-10-25T14:14-05:00",
   "temp_actual": null,
   "pico_hoy": {
     "pico_pred": 29.9,
@@ -66,6 +66,10 @@
     {
       "hora": 13,
       "temp_c": 25.9
+    },
+    {
+      "hora": 14,
+      "temp_c": 26.5
     }
   ],
   "convergencia_hoy": [
