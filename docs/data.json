@@ -1,6 +1,6 @@
 {
-  "hoy": "2026-11-01",
-  "generado": "2026-11-01T16:17-05:00",
+  "hoy": "2026-11-02",
+  "generado": "2026-11-02T15:50-05:00",
   "temp_actual": null,
   "pico_hoy": null,
   "curva_hoy": [
@@ -10,67 +10,63 @@
     },
     {
       "hora": 1,
-      "temp_c": 25.2
-    },
-    {
-      "hora": 2,
-      "temp_c": 23.8
-    },
-    {
-      "hora": 3,
-      "temp_c": 23.6
-    },
-    {
-      "hora": 4,
-      "temp_c": 23.2
-    },
-    {
-      "hora": 5,
-      "temp_c": 23.6
-    },
-    {
-      "hora": 6,
-      "temp_c": 23.8
-    },
-    {
-      "hora": 7,
-      "temp_c": 24.9
-    },
-    {
-      "hora": 8,
-      "temp_c": 25.4
-    },
-    {
-      "hora": 9,
       "temp_c": 25.7
     },
     {
+      "hora": 2,
+      "temp_c": 25.2
+    },
+    {
+      "hora": 3,
+      "temp_c": 24.8
+    },
+    {
+      "hora": 4,
+      "temp_c": 24.5
+    },
+    {
+      "hora": 5,
+      "temp_c": 24.0
+    },
+    {
+      "hora": 6,
+      "temp_c": 24.0
+    },
+    {
+      "hora": 7,
+      "temp_c": 23.6
+    },
+    {
+      "hora": 8,
+      "temp_c": 24.3
+    },
+    {
+      "hora": 9,
+      "temp_c": 24.9
+    },
+    {
       "hora": 10,
-      "temp_c": 27.9
+      "temp_c": 27.0
     },
     {
       "hora": 11,
-      "temp_c": 29.3
+      "temp_c": 28.7
     },
     {
       "hora": 12,
-      "temp_c": 29.3
+      "temp_c": 29.4
     },
     {
       "hora": 13,
-      "temp_c": 30.2
+      "temp_c": 28.4
     },
     {
       "hora": 14,
-      "temp_c": 29.6
+      "temp_c": 29.0
     },
     {
       "hora": 15,
-      "temp_c": 27.6
-    },
-    {
-      "hora": 16,
-      "temp_c": 27.8
+      "temp_c": 28.5
     }
   ],
   "convergencia_hoy": [],
