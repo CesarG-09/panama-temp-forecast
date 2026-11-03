@@ -1,6 +1,6 @@
 {
   "hoy": "2026-11-03",
-  "generado": "2026-11-03T13:30-05:00",
+  "generado": "2026-11-03T16:59-05:00",
   "temp_actual": null,
   "pico_hoy": null,
   "curva_hoy": [
@@ -34,30 +34,42 @@
     },
     {
       "hora": 7,
-      "temp_c": 25.1
+      "temp_c": 25.4
     },
     {
       "hora": 8,
-      "temp_c": 25.7
+      "temp_c": 27.0
     },
     {
       "hora": 9,
-      "temp_c": 26.9
-    },
-    {
-      "hora": 10,
       "temp_c": 28.1
     },
     {
+      "hora": 10,
+      "temp_c": 29.2
+    },
+    {
       "hora": 11,
-      "temp_c": 28.4
+      "temp_c": 29.3
     },
     {
       "hora": 12,
-      "temp_c": 28.3
+      "temp_c": 29.1
     },
     {
       "hora": 13,
+      "temp_c": 29.2
+    },
+    {
+      "hora": 14,
+      "temp_c": 28.9
+    },
+    {
+      "hora": 15,
+      "temp_c": 28.5
+    },
+    {
+      "hora": 16,
       "temp_c": 28.3
     }
   ],
