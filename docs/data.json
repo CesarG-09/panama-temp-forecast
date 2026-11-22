@@ -1,6 +1,6 @@
 {
-  "hoy": "2026-11-21",
-  "generado": "2026-11-21T16:52-05:00",
+  "hoy": "2026-11-22",
+  "generado": "2026-11-22T13:35-05:00",
   "temp_actual": null,
   "pico_hoy": null,
   "curva_hoy": [
@@ -10,27 +10,27 @@
     },
     {
       "hora": 1,
-      "temp_c": 26.0
+      "temp_c": 26.3
     },
     {
       "hora": 2,
-      "temp_c": 25.8
+      "temp_c": 26.1
     },
     {
       "hora": 3,
-      "temp_c": 25.7
+      "temp_c": 25.9
     },
     {
       "hora": 4,
-      "temp_c": 25.5
+      "temp_c": 25.8
     },
     {
       "hora": 5,
-      "temp_c": 25.3
+      "temp_c": 25.7
     },
     {
       "hora": 6,
-      "temp_c": 25.3
+      "temp_c": 25.7
     },
     {
       "hora": 7,
@@ -38,39 +38,27 @@
     },
     {
       "hora": 8,
-      "temp_c": 27.9
+      "temp_c": 27.8
     },
     {
       "hora": 9,
-      "temp_c": 29.4
+      "temp_c": 29.5
     },
     {
       "hora": 10,
-      "temp_c": 30.7
+      "temp_c": 30.9
     },
     {
       "hora": 11,
-      "temp_c": 31.6
+      "temp_c": 31.8
     },
     {
       "hora": 12,
-      "temp_c": 32.3
-    },
-    {
-      "hora": 13,
       "temp_c": 31.5
     },
     {
-      "hora": 14,
-      "temp_c": 30.1
-    },
-    {
-      "hora": 15,
-      "temp_c": 27.9
-    },
-    {
-      "hora": 16,
-      "temp_c": 29.5
+      "hora": 13,
+      "temp_c": 31.1
     }
   ],
   "convergencia_hoy": [],
