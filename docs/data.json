@@ -1,64 +1,76 @@
 {
-  "hoy": "2026-11-22",
-  "generado": "2026-11-22T13:35-05:00",
+  "hoy": "2026-11-24",
+  "generado": "2026-11-24T16:25-05:00",
   "temp_actual": null,
   "pico_hoy": null,
   "curva_hoy": [
     {
       "hora": 0,
-      "temp_c": 26.3
-    },
-    {
-      "hora": 1,
-      "temp_c": 26.3
-    },
-    {
-      "hora": 2,
       "temp_c": 26.1
     },
     {
-      "hora": 3,
+      "hora": 1,
       "temp_c": 25.9
     },
     {
+      "hora": 2,
+      "temp_c": 25.7
+    },
+    {
+      "hora": 3,
+      "temp_c": 25.6
+    },
+    {
       "hora": 4,
-      "temp_c": 25.8
+      "temp_c": 25.4
     },
     {
       "hora": 5,
-      "temp_c": 25.7
+      "temp_c": 25.4
     },
     {
       "hora": 6,
-      "temp_c": 25.7
+      "temp_c": 25.3
     },
     {
       "hora": 7,
-      "temp_c": 26.2
+      "temp_c": 25.9
     },
     {
       "hora": 8,
-      "temp_c": 27.8
+      "temp_c": 27.4
     },
     {
       "hora": 9,
-      "temp_c": 29.5
+      "temp_c": 29.2
     },
     {
       "hora": 10,
-      "temp_c": 30.9
+      "temp_c": 30.8
     },
     {
       "hora": 11,
-      "temp_c": 31.8
+      "temp_c": 32.1
     },
     {
       "hora": 12,
-      "temp_c": 31.5
+      "temp_c": 32.8
     },
     {
       "hora": 13,
-      "temp_c": 31.1
+      "temp_c": 33.0
+    },
+    {
+      "hora": 14,
+      "temp_c": 33.0
+    },
+    {
+      "hora": 15,
+      "temp_c": 31.9
+    },
+    {
+      "hora": 16,
+      "temp_c": 31.2
     }
   ],
   "convergencia_hoy": [],
